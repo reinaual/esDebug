@@ -111,7 +111,11 @@ cdef extern from "particle_data.hpp":
 
     IF ELECTROSTATICS:
         int set_particle_q(int part, double q)
-        int set_particle_iccTypeID(int part, int iccID)
+        int set_particle_iccTypeID(int part, int iccTypeID)
+        int set_particle_sigma(int part, double sigma)
+        int set_particle_area(int part, double area)
+        int set_particle_normal(int part, double normal[3])
+        int set_particle_displace(int part, double displace[3])
 
     IF LB_ELECTROHYDRODYNAMICS:
         int set_particle_mu_E(int part, double mu_E[3])
@@ -181,6 +185,11 @@ cdef extern from "particle_data.hpp":
 
     IF ELECTROSTATICS:
         void pointer_to_q(const particle * P, const double * & res)
+        void pointer_to_iccTypeID(const particle * P, int const *&res)
+        void pointer_to_area(const particle * P, double const *&res)
+        void pointer_to_sigma(const particle * P, double const *&res)
+        void pointer_to_normal(const particle * P, double const *&res)
+        void pointer_to_displace(const particle * P, double const *&res)
 
     IF EXTERNAL_FORCES:
         IF ROTATION:

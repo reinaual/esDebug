@@ -636,18 +636,79 @@ cdef class ParticleHandle(object):
                 return x[0]
 
         property iccTypeID:
-
           def __set__(self, _iccTypeID):
               cdef int iccTypeID
+              check_type_or_throw_except(
+                  _iccTypeID, 1, int, "iccTypeID has to be integer.")
               iccTypeID = _iccTypeID
               if set_particle_iccTypeID(self._id, iccTypeID) == 1:
                   raise Exception("Set particle position first.")
 
           def __get__(self):
               self.update_particle_data()
-              cdef const double * x = NULL
-              pointer_to_q(self.particle_data, x)
+              cdef const int * x = NULL
+              pointer_to_iccTypeID(self.particle_data, x)
               return x[0]
+
+        property area:
+              def __set__(self, _area):
+                  cdef double area
+                  check_type_or_throw_except(
+                      _area, 1, float, "area has to be float.")
+                  area = _area
+                  if set_particle_area(self._id, area) == 1:
+                      raise Exception("Set particle position first.")
+
+              def __get__(self):
+                  self.update_particle_data()
+                  cdef const double * x = NULL
+                  pointer_to_area(self.particle_data, x)
+                  return x[0]
+
+        property sigma:
+              def __set__(self, _sigma):
+                  cdef double sigma
+                  check_type_or_throw_except(
+                      _sigma, 1, float, "sigma has to be float.")
+                  sigma = _sigma
+                  if set_particle_sigma(self._id, sigma) == 1:
+                      raise Exception("Set particle position first.")
+
+              def __get__(self):
+                  self.update_particle_data()
+                  cdef const double * x = NULL
+                  pointer_to_sigma(self.particle_data, x)
+                  return x[0]
+
+        property normal:
+              def __set__(self, _normal):
+                  cdef double normal[3]
+                  check_type_or_throw_except(
+                      _normal, 3, float, "normal has to be 3 floats.")
+                  normal = _normal
+                  if set_particle_normal(self._id, normal) == 1:
+                      raise Exception("Set particle position first.")
+
+              def __get__(self):
+                  self.update_particle_data()
+                  cdef const double * x = NULL
+                  pointer_to_normal(self.particle_data, x)
+                  return array_locked([x[0], x[1], x[2]])
+
+        property displace:
+              def __set__(self, _displace):
+                  cdef double displace[3]
+                  check_type_or_throw_except(
+                      _displace, 3, float, "displace has to be 3 floats.")
+                  displace = _displace
+                  if set_particle_displace(self._id, displace) == 1:
+                      raise Exception("Set particle position first.")
+
+              def __get__(self):
+                  self.update_particle_data()
+                  cdef const double * x = NULL
+                  pointer_to_displace(self.particle_data, x)
+                  return array_locked([x[0], x[1], x[2]])
 
     IF LB_ELECTROHYDRODYNAMICS:
         property mu_E:
