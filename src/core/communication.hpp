@@ -207,6 +207,14 @@ void mpi_send_mass(int node, int part, double mass);
 */
 void mpi_send_q(int node, int part, double q);
 
+#ifdef ELECTROSTATICS
+void mpi_send_iccTypeID(int node, int part, int iccTypeID);
+void mpi_send_sigma(int node, int part, double sigma);
+void mpi_send_area(int node, int part, double area);
+void mpi_send_normal(int node, int part, double normal[3]);
+void mpi_send_displace(int node, int part, double displace[3]);
+#endif
+
 /** Issue REQ_SET_MU_E: send particle electrophoretic mobility.
     Also calls \ref on_particle_change.
     \param part the particle.

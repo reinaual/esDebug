@@ -127,6 +127,11 @@ static int terminated = 0;
   CB(mpi_send_swimming_slave)                                                  \
   CB(mpi_send_f_slave)                                                         \
   CB(mpi_send_q_slave)                                                         \
+  CB(mpi_send_iccTypeID_slave)                                                 \
+  CB(mpi_send_sigma_slave)                                                     \
+  CB(mpi_send_area_slave)                                                      \
+  CB(mpi_send_normal_slave)                                                    \
+  CB(mpi_send_displace_slave)                                                  \
   CB(mpi_send_type_slave)                                                      \
   CB(mpi_send_bond_slave)                                                      \
   CB(mpi_recv_part_slave)                                                      \
@@ -525,6 +530,145 @@ void mpi_send_q_slave(int pnode, int part) {
   on_particle_charge_change();
 #endif
 }
+
+void mpi_send_iccTypeID(int pnode, int part, int iccTypeID) {
+  #ifdef ELECTROSTATICS
+    mpi_call(mpi_send_iccTypeID_slave, pnode, part);
+
+    if (pnode == this_node) {
+      Particle *p = local_particles[part];
+      p->adapICC.iccTypeID = iccTypeID;
+    } else {
+      MPI_Send(&iccTypeID, 1, MPI_INT, pnode, SOME_TAG, comm_cart);
+    }
+
+    on_particle_change();
+  #endif
+}
+
+void mpi_send_iccTypeID_slave(int pnode, int part) {
+#ifdef ELECTROSTATICS
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+    MPI_Recv(&p->adapICC.iccTypeID, 1, MPI_INT, 0, SOME_TAG, comm_cart, MPI_STATUS_IGNORE);
+  }
+
+  on_particle_change();
+#endif
+}
+
+void mpi_send_sigma(int pnode, int part, double sigma) {
+  #ifdef ELECTROSTATICS
+    mpi_call(mpi_send_sigma_slave, pnode, part);
+
+    if (pnode == this_node) {
+      Particle *p = local_particles[part];
+      p->adapICC.sigma = sigma;
+    } else {
+      MPI_Send(&sigma, 1, MPI_DOUBLE, pnode, SOME_TAG, comm_cart);
+    }
+
+    on_particle_change();
+  #endif
+}
+
+void mpi_send_sigma_slave(int pnode, int part) {
+#ifdef ELECTROSTATICS
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+    MPI_Recv(&p->adapICC.sigma, 1, MPI_DOUBLE, 0, SOME_TAG, comm_cart, MPI_STATUS_IGNORE);
+  }
+
+  on_particle_change();
+#endif
+}
+
+void mpi_send_area(int pnode, int part, double area) {
+  #ifdef ELECTROSTATICS
+    mpi_call(mpi_send_area_slave, pnode, part);
+
+    if (pnode == this_node) {
+      Particle *p = local_particles[part];
+      p->adapICC.area = area;
+    } else {
+      MPI_Send(&area, 1, MPI_DOUBLE, pnode, SOME_TAG, comm_cart);
+    }
+
+    on_particle_change();
+  #endif
+}
+
+void mpi_send_area_slave(int pnode, int part) {
+#ifdef ELECTROSTATICS
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+    MPI_Recv(&p->adapICC.area, 1, MPI_DOUBLE, 0, SOME_TAG, comm_cart, MPI_STATUS_IGNORE);
+  }
+
+  on_particle_change();
+#endif
+}
+
+void mpi_send_normal(int pnode, int part, double normal[3]) {
+#ifdef ELECTROSTATICS
+  mpi_call(mpi_send_normal_slave, pnode, part);
+
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+    /*  memmove(p->omega, omega, 3*sizeof(double));*/
+    p->adapICC.normal[0] = normal[0];
+    p->adapICC.normal[1] = normal[1];
+    p->adapICC.normal[2] = normal[2];
+  } else {
+    MPI_Send(normal, 3, MPI_DOUBLE, pnode, SOME_TAG, comm_cart);
+  }
+
+  on_particle_change();
+#endif
+}
+
+void mpi_send_normal_slave(int pnode, int part) {
+#ifdef ELECTROSTATICS
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+    MPI_Recv(p->adapICC.normal.data(), 3, MPI_DOUBLE, 0, SOME_TAG, comm_cart,
+             MPI_STATUS_IGNORE);
+  }
+
+  on_particle_change();
+#endif
+}
+
+void mpi_send_displace(int pnode, int part, double displace[3]) {
+#ifdef ELECTROSTATICS
+  mpi_call(mpi_send_displace_slave, pnode, part);
+
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+    /*  memmove(p->omega, omega, 3*sizeof(double));*/
+    p->adapICC.displace[0] = displace[0];
+    p->adapICC.displace[1] = displace[1];
+    p->adapICC.displace[2] = displace[2];
+  } else {
+    MPI_Send(displace, 3, MPI_DOUBLE, pnode, SOME_TAG, comm_cart);
+  }
+
+  on_particle_change();
+#endif
+}
+
+void mpi_send_displace_slave(int pnode, int part) {
+#ifdef ELECTROSTATICS
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+    MPI_Recv(p->adapICC.displace.data(), 3, MPI_DOUBLE, 0, SOME_TAG, comm_cart,
+             MPI_STATUS_IGNORE);
+  }
+
+  on_particle_change();
+#endif
+}
+
 
 /********************* REQ_SET_MU_E ********/
 void mpi_send_mu_E(int pnode, int part, double mu_E[3]) {

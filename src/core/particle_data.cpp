@@ -599,6 +599,44 @@ int set_particle_q(int part, double q) {
   return ES_OK;
 }
 
+#ifdef ELECTROSTATICS
+int set_particle_iccTypeID(int part, int iccTypeID) {
+  auto const pnode = get_particle_node(part);
+
+  mpi_send_iccTypeID(pnode, part, iccTypeID);
+  return ES_OK;
+}
+
+int set_particle_sigma(int part, double sigma) {
+  auto const pnode = get_particle_node(part);
+
+  mpi_send_sigma(pnode, part, sigma);
+  return ES_OK;
+}
+
+int set_particle_area(int part, double area) {
+  auto const pnode = get_particle_node(part);
+
+  mpi_send_area(pnode, part, area);
+  return ES_OK;
+}
+
+int set_particle_normal(int part, double normal[3]) {
+  auto const pnode = get_particle_node(part);
+
+  mpi_send_normal(pnode, part, normal);
+  return ES_OK;
+}
+
+int set_particle_displace(int part, double displace[3]) {
+  auto const pnode = get_particle_node(part);
+
+  mpi_send_displace(pnode, part, displace);
+  return ES_OK;
+}
+
+#endif
+
 #ifdef LB_ELECTROHYDRODYNAMICS
 int set_particle_mu_E(int part, double mu_E[3]) {
   auto const pnode = get_particle_node(part);
@@ -1249,6 +1287,20 @@ void pointer_to_quatu(Particle const *p, double const *&res) {
 
 #ifdef ELECTROSTATICS
 void pointer_to_q(Particle const *p, double const *&res) { res = &(p->p.q); }
+#endif
+
+#ifdef ELECTROSTATICS
+void pointer_to_iccTypeID(Particle const *p, int const *&res) { res = &(p->adapICC.iccTypeID); }
+void pointer_to_area(Particle const *p, double const *&res)  { res = &(p->adapICC.area); }
+void pointer_to_sigma(Particle const *p, double const *&res) { res = &(p->adapICC.sigma); }
+
+void pointer_to_normal(Particle const *p, double const *&res) {
+  res = p->adapICC.normal.data();
+}
+
+void pointer_to_displace(Particle const *p, double const *&res) {
+  res = p->adapICC.displace.data();
+}
 #endif
 
 #ifdef VIRTUAL_SITES

@@ -635,6 +635,20 @@ cdef class ParticleHandle(object):
                 pointer_to_q(self.particle_data, x)
                 return x[0]
 
+        property iccTypeID:
+
+          def __set__(self, _iccTypeID):
+              cdef int iccTypeID
+              iccTypeID = _iccTypeID
+              if set_particle_iccTypeID(self._id, iccTypeID) == 1:
+                  raise Exception("Set particle position first.")
+
+          def __get__(self):
+              self.update_particle_data()
+              cdef const double * x = NULL
+              pointer_to_q(self.particle_data, x)
+              return x[0]
+
     IF LB_ELECTROHYDRODYNAMICS:
         property mu_E:
             """

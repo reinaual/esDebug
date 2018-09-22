@@ -317,6 +317,16 @@ struct ParticleParametersSwimming {
 #endif
 };
 
+struct ParticleAdaptiveICC {
+#ifdef ELECTROSTATICS
+  int iccTypeID = -1;
+  Vector3d displace;
+  Vector3d normal;
+  double area = 0.;
+  double sigma = 0.;
+#endif
+};
+
 /** Struct holding all information for one particle. */
 struct Particle {
   int &identity() { return p.identity; }
@@ -348,6 +358,9 @@ struct Particle {
     ret.m = m;
     ret.f = f;
     ret.l = l;
+#ifdef ELECTROSTATICS
+    ret.adapICC = adapICC;
+#endif
 #ifdef LB
     ret.lc = lc;
 #endif
@@ -369,6 +382,9 @@ struct Particle {
   ///
   ParticleLocal l;
 ///
+#ifdef ELECTROSTATICS
+  ParticleAdaptiveICC adapICC;
+#endif
 #ifdef LB
   ParticleLatticeCoupling lc;
 #endif
@@ -688,6 +704,14 @@ int set_particle_out_direction(int part, double out_direction[3]);
 */
 int set_particle_q(int part, double q);
 
+#ifdef ELECTROSTATICS
+int set_particle_iccTypeID(int part, int iccTypeID);
+int set_particle_sigma(int part, double sigma);
+int set_particle_area(int part, double area);
+int set_particle_normal(int part, double normal[3]);
+int set_particle_displace(int part, double displace[3]);
+#endif
+
 #ifdef LB_ELECTROHYDRODYNAMICS
 /** Call only on the master node: set particle electrophoretic mobility.
     @param part the particle.
@@ -993,6 +1017,14 @@ void pointer_to_quatu(Particle const *p, double const *&res);
 
 #ifdef ELECTROSTATICS
 void pointer_to_q(Particle const *p, double const *&res);
+#endif
+
+#ifdef ELECTROSTATICS
+void pointer_to_iccTypeID(Particle const *p, int const *&res);
+void pointer_to_area(Particle const *p, double const *&res);
+void pointer_to_sigma(Particle const *p, double const *&res);
+void pointer_to_normal(Particle const *p, double const *&res);
+void pointer_to_displace(Particle const *p, double const *&res);
 #endif
 
 #ifdef VIRTUAL_SITES
