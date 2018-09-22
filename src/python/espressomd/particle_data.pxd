@@ -185,11 +185,11 @@ cdef extern from "particle_data.hpp":
 
     IF ELECTROSTATICS:
         void pointer_to_q(const particle * P, const double * & res)
-        void pointer_to_iccTypeID(const particle * P, int const *&res)
-        void pointer_to_area(const particle * P, double const *&res)
-        void pointer_to_sigma(const particle * P, double const *&res)
-        void pointer_to_normal(const particle * P, double const *&res)
-        void pointer_to_displace(const particle * P, double const *&res)
+        void pointer_to_iccTypeID(const particle * P, const int * & res)
+        void pointer_to_area(const particle * P, const double * & res)
+        void pointer_to_sigma(const particle * P, const double * & res)
+        void pointer_to_normal(const particle * P, const double * & res)
+        void pointer_to_displace(const particle * P, const double * & res)
 
     IF EXTERNAL_FORCES:
         IF ROTATION:
