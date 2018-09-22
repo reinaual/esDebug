@@ -113,6 +113,7 @@ cdef extern from "particle_data.hpp":
         int set_particle_q(int part, double q)
         int set_particle_iccTypeID(int part, int iccTypeID)
         int set_particle_sigma(int part, double sigma)
+        int set_particle_eps(int part, double eps)
         int set_particle_area(int part, double area)
         int set_particle_normal(int part, double normal[3])
         int set_particle_displace(int part, double displace[3])
@@ -188,6 +189,7 @@ cdef extern from "particle_data.hpp":
         void pointer_to_iccTypeID(const particle * P, const int * & res)
         void pointer_to_area(const particle * P, const double * & res)
         void pointer_to_sigma(const particle * P, const double * & res)
+        void pointer_to_eps(const particle * P, const double * & res)
         void pointer_to_normal(const particle * P, const double * & res)
         void pointer_to_displace(const particle * P, const double * & res)
 

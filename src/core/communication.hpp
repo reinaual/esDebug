@@ -210,6 +210,7 @@ void mpi_send_q(int node, int part, double q);
 #ifdef ELECTROSTATICS
 void mpi_send_iccTypeID(int node, int part, int iccTypeID);
 void mpi_send_sigma(int node, int part, double sigma);
+void mpi_send_eps(int node, int part, double eps);
 void mpi_send_area(int node, int part, double area);
 void mpi_send_normal(int node, int part, double normal[3]);
 void mpi_send_displace(int node, int part, double displace[3]);

@@ -614,6 +614,13 @@ int set_particle_sigma(int part, double sigma) {
   return ES_OK;
 }
 
+int set_particle_eps(int part, double eps) {
+  auto const pnode = get_particle_node(part);
+
+  mpi_send_eps(pnode, part, eps);
+  return ES_OK;
+}
+
 int set_particle_area(int part, double area) {
   auto const pnode = get_particle_node(part);
 
@@ -1293,6 +1300,7 @@ void pointer_to_q(Particle const *p, double const *&res) { res = &(p->p.q); }
 void pointer_to_iccTypeID(Particle const *p, int const *&res) { res = &(p->adapICC.iccTypeID); }
 void pointer_to_area(Particle const *p, double const *&res)  { res = &(p->adapICC.area); }
 void pointer_to_sigma(Particle const *p, double const *&res) { res = &(p->adapICC.sigma); }
+void pointer_to_eps(Particle const *p, double const *&res) { res = &(p->adapICC.eps); }
 
 void pointer_to_normal(Particle const *p, double const *&res) {
   res = p->adapICC.normal.data();

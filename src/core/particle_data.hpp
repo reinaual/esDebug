@@ -324,6 +324,7 @@ struct ParticleAdaptiveICC {
   Vector3d normal;
   double area = 0.;
   double sigma = 0.;
+  double eps = 0.;
 #endif
 };
 
@@ -708,6 +709,7 @@ int set_particle_q(int part, double q);
 int set_particle_iccTypeID(int part, int iccTypeID);
 int set_particle_sigma(int part, double sigma);
 int set_particle_area(int part, double area);
+int set_particle_eps(int part, double eps);
 int set_particle_normal(int part, double normal[3]);
 int set_particle_displace(int part, double displace[3]);
 #endif
@@ -1023,6 +1025,7 @@ void pointer_to_q(Particle const *p, double const *&res);
 void pointer_to_iccTypeID(Particle const *p, int const *&res);
 void pointer_to_area(Particle const *p, double const *&res);
 void pointer_to_sigma(Particle const *p, double const *&res);
+void pointer_to_eps(Particle const *p, double const *&res);
 void pointer_to_normal(Particle const *p, double const *&res);
 void pointer_to_displace(Particle const *p, double const *&res);
 #endif

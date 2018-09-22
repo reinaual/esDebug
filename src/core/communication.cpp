@@ -129,6 +129,7 @@ static int terminated = 0;
   CB(mpi_send_q_slave)                                                         \
   CB(mpi_send_iccTypeID_slave)                                                 \
   CB(mpi_send_sigma_slave)                                                     \
+  CB(mpi_send_eps_slave)                                                       \
   CB(mpi_send_area_slave)                                                      \
   CB(mpi_send_normal_slave)                                                    \
   CB(mpi_send_displace_slave)                                                  \
@@ -577,6 +578,32 @@ void mpi_send_sigma_slave(int pnode, int part) {
   if (pnode == this_node) {
     Particle *p = local_particles[part];
     MPI_Recv(&p->adapICC.sigma, 1, MPI_DOUBLE, 0, SOME_TAG, comm_cart, MPI_STATUS_IGNORE);
+  }
+
+  on_particle_change();
+#endif
+}
+
+void mpi_send_eps(int pnode, int part, double eps) {
+  #ifdef ELECTROSTATICS
+    mpi_call(mpi_send_eps_slave, pnode, part);
+
+    if (pnode == this_node) {
+      Particle *p = local_particles[part];
+      p->adapICC.eps = eps;
+    } else {
+      MPI_Send(&eps, 1, MPI_DOUBLE, pnode, SOME_TAG, comm_cart);
+    }
+
+    on_particle_change();
+  #endif
+}
+
+void mpi_send_eps_slave(int pnode, int part) {
+#ifdef ELECTROSTATICS
+  if (pnode == this_node) {
+    Particle *p = local_particles[part];
+    MPI_Recv(&p->adapICC.eps, 1, MPI_DOUBLE, 0, SOME_TAG, comm_cart, MPI_STATUS_IGNORE);
   }
 
   on_particle_change();

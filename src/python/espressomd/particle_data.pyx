@@ -680,6 +680,21 @@ cdef class ParticleHandle(object):
                   pointer_to_sigma(self.particle_data, x)
                   return x[0]
 
+        property eps:
+              def __set__(self, _eps):
+                  cdef double eps
+                  check_type_or_throw_except(
+                      _eps, 1, float, "epsilon has to be float.")
+                  eps = _eps
+                  if set_particle_eps(self._id, eps) == 1:
+                      raise Exception("Set particle position first.")
+
+              def __get__(self):
+                  self.update_particle_data()
+                  cdef const double * x = NULL
+                  pointer_to_eps(self.particle_data, x)
+                  return x[0]
+
         property normal:
               def __set__(self, _normal):
                   cdef double normal[3]
