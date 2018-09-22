@@ -54,14 +54,19 @@
 #define CORE_ICCP3M_HPP
 
 #include "config.hpp"
+#include "partCfg_global.hpp"
 
 #if defined(ELECTROSTATICS)
 
 #include "Vector.hpp"
+#include "iccShape.hpp"
+#include <queue>
 
 /* iccp3m data structures*/
 struct iccp3m_struct {
-  int n_ic;                  /* Last induced id (can not be smaller then 2) */
+  std::vector<iccShape *> iccTypes;
+  std::queue<std::vector<NewParticle>> newParticleData;
+  int n_ic;                  /* Last induced id (can not be smaller than 2) */
   int num_iteration = 30;    /* Number of max iterations                    */
   double eout = 1;           /* Dielectric constant of the bulk             */
   std::vector<double> areas; /* Array of area of the grid elements          */
@@ -77,6 +82,8 @@ struct iccp3m_struct {
       0; /* flag that indicates if ICCP3M has been initialized properly
           */
   int first_id = 0;
+  double maxCharge = 0.;
+  double minCharge = 0.;
 
   template <typename Archive>
   void serialize(Archive &ar, long int /* version */) {
@@ -105,6 +112,10 @@ int iccp3m_iteration();
 /** The allocation of ICCP3M lists for python interface
  */
 void iccp3m_alloc_lists();
+
+void c_splitParticles(PartCfg &partCfg);
+
+int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9]);
 
 /** check sanity of parameters for use with ICCP3M
  */

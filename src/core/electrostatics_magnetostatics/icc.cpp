@@ -46,9 +46,13 @@
 #include "initialize.hpp"
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
 #include "particle_data.hpp"
+#include "partCfg_global.hpp"
 
 #include "short_range_loop.hpp"
 #include "utils/NoOp.hpp"
+
+#include "iccShape.hpp"
+#include "iccWall.hpp"
 
 #ifdef ELECTROSTATICS
 
@@ -299,6 +303,31 @@ void calc_long_range_forces_iccp3m() {
 
 #endif
 }
+
+int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9]) {
+  iccWall * wall = new iccWall(normal, dist, cutoff, useTrans, &transMatrix[0], &invMatrix[0]);
+  iccp3m_cfg.iccTypes.push_back(wall);
+  return iccp3m_cfg.iccTypes.size();
+}
+
+void c_splitParticles(PartCfg &partCfg) {
+  for (auto &p : partCfg) {
+    if (p.p.identity < iccp3m_cfg.n_ic + iccp3m_cfg.first_id &&
+        p.p.identity >= iccp3m_cfg.first_id &&
+        fabs(p.p.q) > iccp3m_cfg.maxCharge) {
+          // check if particle is splittable
+          iccShape * shapePointer = iccp3m_cfg.iccTypes[p.adapICC.iccTypeID];
+          if (shapePointer->cutoff[0] >= p.adapICC.displace[0] &&
+              shapePointer->cutoff[1] >= p.adapICC.displace[1] &&
+              shapePointer->cutoff[2] >= p.adapICC.displace[2]) {
+                // split this particle
+                shapePointer->splitExt(&p, iccp3m_cfg.newParticleData);
+          }
+    }
+  }
+  // call function to create arrays from newPArticleData;
+}
+
 
 /** \name Private Functions */
 /************************************************************/

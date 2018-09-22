@@ -24,7 +24,20 @@ from espressomd.system cimport *
 from espressomd.utils cimport *
 from espressomd.electrostatics cimport *
 from libcpp cimport vector
+from libcpp.queue cimport queue
 from utils cimport Vector3d
+
+cdef extern from "PartCfg.hpp":
+    cppclass PartCfg:
+        pass
+
+cdef extern from "partCfg_global.hpp":
+    PartCfg & partCfg()
+
+cdef extern from "electrostatics_magnetostatics/iccShape.hpp":
+    struct NewParticle:
+        pass
+
 
 IF ELECTROSTATICS and P3M:
 
@@ -47,6 +60,7 @@ IF ELECTROSTATICS and P3M:
 
     cdef extern from "electrostatics_magnetostatics/icc.hpp":
         ctypedef struct iccp3m_struct:
+            queue[vector[NewParticle]] newParticleData
             int n_ic
             int num_iteration
             double eout
@@ -59,11 +73,17 @@ IF ELECTROSTATICS and P3M:
             double relax
             int citeration
             int first_id
+            double maxCharge
+            double minCharge
 
         # links intern C-struct with python object
         iccp3m_struct iccp3m_cfg
 
         void iccp3m_alloc_lists()
+
+        void c_splitParticles(PartCfg & partCfg)
+
+        int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9])
 
     cdef extern from "communication.hpp":
         int mpi_iccp3m_init()

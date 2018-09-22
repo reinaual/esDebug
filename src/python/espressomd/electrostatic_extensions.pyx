@@ -24,6 +24,7 @@ from espressomd cimport actors
 from . import actors
 import numpy as np
 from espressomd.utils cimport handle_errors
+from .system import System
 
 IF ELECTROSTATICS and P3M:
     from espressomd.electrostatics import check_neutrality
@@ -304,3 +305,34 @@ IF ELECTROSTATICS and P3M:
 
             # Broadcasts vars
             mpi_iccp3m_init()
+
+        def addToSystem(self):
+            print('hey!')
+
+        def addTypeWall(self, _normal, _dist, _cutoff, _transMatrix=None, _invMatrix=None):
+            cdef Vector3d normal
+            cdef double dist
+            cdef Vector3d cutoff
+            cdef bool useTrans
+            cdef double transMatrix[9]
+            cdef double invMatrix[9]
+
+            check_type_or_throw_except(_normal, 3, float, "normal has to be floats")
+            check_type_or_throw_except(_dist, 1, float, "dist has to be float")
+            check_type_or_throw_except(_cutoff, 3, float, "cutoff has to be floats")
+            for i in range(3):
+                normal[i] = _normal[i]
+                cutoff[i] = _cutoff[i]
+            dist = _dist
+
+            if _transMatrix and _invMatrix:
+                check_type_or_throw_except(_transMatrix, 9, float, "Matrix has to be 9 floats")
+                check_type_or_throw_except(_invMatrix, 9, float, "Matrix has to be 9 floats")
+                useTrans = True
+                for i in range(9):
+                    transMatrix[i] = _transMatrix[i]
+                    invMatrix[i] = _invMatrix[i]
+            else:
+                useTrans = False
+
+            return c_addTypeWall(normal, dist, cutoff, useTrans, transMatrix, invMatrix)

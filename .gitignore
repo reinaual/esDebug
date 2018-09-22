@@ -55,4 +55,6 @@ doc/dg/background_errors.unsorted
 # Compiled python
 *.pyc
 
+*.gch
+
 .ycm_extra_conf.py

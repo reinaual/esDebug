@@ -13,6 +13,7 @@ add_library(electrostatics_magnetostatics_core SHARED
     p3m-dipolar.cpp
     p3m_gpu.cpp
     scafacos.cpp
+    iccWall.cpp
 )
 
 if(CUDA)
@@ -40,3 +41,5 @@ add_dependencies(electrostatics_magnetostatics_core EspressoConfig)
 if(SCAFACOS)
   add_subdirectory(scafacos)
 endif(SCAFACOS)
+
+# add_subdirectory(iccShapes)
