@@ -13,8 +13,9 @@ add_library(electrostatics_magnetostatics_core SHARED
     p3m-dipolar.cpp
     p3m_gpu.cpp
     scafacos.cpp
-    iccWall.cpp
     iccShape.cpp
+    iccWall.cpp
+    iccCylinder.cpp
 )
 
 if(CUDA)

@@ -132,7 +132,22 @@ void c_getCharges(PartCfg & partCfg);
 void c_rebuildData(PartCfg & partCfg);
 void c_checkSet(int ID);
 
-int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9]);
+int c_addTypeWall(Vector3d normal,
+                  double dist,
+                  Vector3d cutoff,
+                  bool useTrans,
+                  double transMatrix[9],
+                  double invMatrix[9]);
+
+int c_addTypeCylinder(Vector3d center,
+                      Vector3d axis,
+                      double length,
+                      double radius,
+                      double direction,
+                      Vector3d cutoff,
+                      bool useTrans,
+                      double * transMatrix,
+                      double * invMatrix);
 
 /** check sanity of parameters for use with ICCP3M
  */

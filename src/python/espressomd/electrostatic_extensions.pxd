@@ -115,6 +115,7 @@ IF ELECTROSTATICS and P3M:
         void c_getCharges(PartCfg & partCfg)
 
         int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9])
+        int c_addTypeCylinder(Vector3d center, Vector3d axis, double length, double radius, double direction, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix)
 
     cdef extern from "communication.hpp":
         int mpi_iccp3m_init()

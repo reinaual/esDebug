@@ -54,6 +54,7 @@
 
 #include "iccShape.hpp"
 #include "iccWall.hpp"
+#include "iccCylinder.hpp"
 
 #ifdef ELECTROSTATICS
 
@@ -306,12 +307,6 @@ void calc_long_range_forces_iccp3m() {
 #endif
 }
 
-int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9]) {
-  iccWall * wall = new iccWall(normal, dist, cutoff, useTrans, &transMatrix[0], &invMatrix[0]);
-  iccp3m_data.iccTypes.push_back(wall);
-  return iccp3m_data.iccTypes.size();
-}
-
 void c_splitParticles(PartCfg &partCfg) {
   for (auto &p : partCfg) {
     if (p.p.identity < iccp3m_cfg.n_ic + iccp3m_cfg.first_id + iccp3m_cfg.numMissingIDs &&
@@ -380,6 +375,17 @@ void c_checkSet(int ID) {
   }
 }
 
+int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9]) {
+  iccWall * wall = new iccWall(normal, dist, cutoff, useTrans, &transMatrix[0], &invMatrix[0]);
+  iccp3m_data.iccTypes.push_back(wall);
+  return iccp3m_data.iccTypes.size();
+}
+
+int c_addTypeCylinder(Vector3d center, Vector3d axis, double length, double radius, double direction, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {
+  iccCylinder * cylinder = new iccCylinder(center, axis, length, radius, direction, cutoff, useTrans, transMatrix, invMatrix);
+  iccp3m_data.iccTypes.push_back(cylinder);
+  return iccp3m_data.iccTypes.size();
+}
 
 /** \name Private Functions */
 /************************************************************/
