@@ -5,20 +5,21 @@
 
 #include <queue>
 
-void iccWall::reduceExt(const Particle * p) {
-    // normal vector stays the same
-    return;
+void iccWall::reduceExt(NewParticle & reducedPart) {
+    Vector3d t = {reducedPart.displace[0], reducedPart.displace[1], 0.0};
+    reducedPart.pos -= t;
+    reducedPart.normal = normal;
+    reducedPart.displace = reducedPart.displace * 2.;
 }
 
 void iccWall::splitExt(const Particle * p, std::queue<std::vector<NewParticle>> &newParticleData) {
     // split to 4 new particles
     const Vector3d temp = p->r.p;
     const double chargedensity = p->p.q / p->adapICC.area;
-    const Vector3d newdisplace = p->adapICC.displace / 2.;
-    const double newArea = 4. * newdisplace[0] * newdisplace[1];
+    const Vector3d newdisplace = p->adapICC.displace / 2.0;
+    const double newArea = 4.0 * newdisplace[0] * newdisplace[1];
 
     std::vector<NewParticle> newP(newParticles + 1);
-    newP.push_back(NewParticle());
 
     newP[0].parentID = p->p.identity;
     newP[0].iccTypeID = p->adapICC.iccTypeID;
@@ -31,7 +32,6 @@ void iccWall::splitExt(const Particle * p, std::queue<std::vector<NewParticle>> 
     newP[0].charge = chargedensity * newArea;
 
     for (int i = 1; i < newParticles + 1; i++) {
-        newP.push_back(NewParticle());
         newP[i].parentID = 0;
         newP[i].iccTypeID = p->adapICC.iccTypeID;
         newP[i].typeID = p->p.type;
@@ -42,13 +42,13 @@ void iccWall::splitExt(const Particle * p, std::queue<std::vector<NewParticle>> 
         newP[i].area = newArea;
         newP[i].charge = newP[0].charge;
     }
-    Vector3d t = {newdisplace[0], newdisplace[1], 0.};
+    Vector3d t = {newdisplace[0], newdisplace[1], 0.0};
     newP[0].pos = temp + t;
-    t = {-newdisplace[0], newdisplace[1], 0.};
+    t = {-newdisplace[0], newdisplace[1], 0.0};
     newP[1].pos = temp + t;
-    t = {newdisplace[0], -newdisplace[1], 0.};
+    t = {newdisplace[0], -newdisplace[1], 0.0};
     newP[2].pos = temp + t;
-    t = {-newdisplace[0], -newdisplace[1], 0.};
+    t = {-newdisplace[0], -newdisplace[1], 0.0};
     newP[3].pos = temp + t;
 
     newParticleData.push(newP);

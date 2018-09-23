@@ -158,6 +158,7 @@ IF ELECTROSTATICS and P3M:
         """
 
         def validate_params(self):
+            print(self._params)
             default_params = self.default_params()
 
             check_type_or_throw_except(self._params["n_icc"], 1, int, "")
@@ -190,6 +191,16 @@ IF ELECTROSTATICS and P3M:
             check_type_or_throw_except(
                 self._params["eps_out"], 1, float, "")
 
+            check_type_or_throw_except(
+                    self._params["maxCharge"], 1, float, "")
+            check_range_or_except(
+                self._params, "maxCharge", 0, True, "inf", True)
+
+            check_type_or_throw_except(
+                    self._params["minCharge"], 1, float, "")
+            check_range_or_except(
+                self._params, "minCharge", 0, True, "inf", True)
+
             # Required list input
             self._params["normals"] = np.array(self._params["normals"])
             if self._params["normals"].size != self._params["n_icc"] * 3:
@@ -214,11 +225,15 @@ IF ELECTROSTATICS and P3M:
             else:
                 self._params["epsilons"] = np.zeros(self._params["n_icc"])
 
+            if not ("maxCharge" in self._params.keys() and "minCharge" in self._params.keys()):
+                self._params["maxCharge"] = 0.
+                self._params["minCharge"] = 0.
+
         def valid_keys(self):
-            return "n_icc", "convergence", "relaxation", "ext_field", "max_iterations", "first_id", "eps_out", "normals", "areas", "sigmas", "epsilons", "check_neutrality"
+            return "n_icc", "convergence", "relaxation", "ext_field", "max_iterations", "first_id", "eps_out", "normals", "areas", "sigmas", "epsilons", "check_neutrality", "maxCharge", "minCharge"
 
         def required_keys(self):
-            return ["n_icc", "normals", "areas"]
+            return [ "n_icc", "normals", "areas"]
 
         def default_params(self):
             return {"n_icc": 0,
@@ -232,7 +247,9 @@ IF ELECTROSTATICS and P3M:
                     "areas": [],
                     "sigmas": [],
                     "epsilons": [],
-                    "check_neutrality": True}
+                    "check_neutrality": True,
+                    "maxCharge": 0.,
+                    "minCharge": 0.}
 
         def _get_params_from_es_core(self):
             params = {}
@@ -263,11 +280,15 @@ IF ELECTROSTATICS and P3M:
             params["relaxation"] = iccp3m_cfg.relax
             params["eps_out"] = iccp3m_cfg.eout
 
+            params["maxCharge"] = iccp3m_data.maxCharge
+            params["minCharge"] = iccp3m_data.minCharge
+
             return params
 
         def _set_params_in_es_core(self):
             # First set number of icc particles
             iccp3m_cfg.n_ic = self._params["n_icc"]
+            iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size();
             # Allocate ICC lists
             iccp3m_alloc_lists()
 
@@ -290,9 +311,59 @@ IF ELECTROSTATICS and P3M:
             iccp3m_cfg.relax = self._params["relaxation"]
             iccp3m_cfg.eout = self._params["eps_out"]
             iccp3m_cfg.citeration = 0
+            iccp3m_data.maxCharge = self._params["maxCharge"]
+            iccp3m_data.minCharge = self._params["minCharge"]
+            iccp3m_cfg.largestID = self._params["first_id"] + self._params["n_icc"]
 
             # Broadcasts vars
             mpi_iccp3m_init()
+
+        def _addNewParticlesToSystem(self, _system):
+            cdef vector[int] currID
+            # loop over all particles to split
+            while (iccp3m_data.newParticleData.size() != 0):
+                currID.clear()
+                # first particle is only modified
+                currID.push_back(iccp3m_data.newParticleData.front()[0].parentID)
+
+                parentPart = _system.part[iccp3m_data.newParticleData.front()[0].parentID]
+                parentPart.pos = [iccp3m_data.newParticleData.front()[0].pos[0],
+                                  iccp3m_data.newParticleData.front()[0].pos[1],
+                                  iccp3m_data.newParticleData.front()[0].pos[2]]
+                parentPart.q = iccp3m_data.newParticleData.front()[0].charge
+                parentPart.displace = [iccp3m_data.newParticleData.front()[0].displace[0],
+                                       iccp3m_data.newParticleData.front()[0].displace[1],
+                                       iccp3m_data.newParticleData.front()[0].displace[2]]
+                parentPart.normal = [iccp3m_data.newParticleData.front()[0].normal[0],
+                                     iccp3m_data.newParticleData.front()[0].normal[1],
+                                     iccp3m_data.newParticleData.front()[0].normal[2]]
+                parentPart.area = iccp3m_data.newParticleData.front()[0].area
+
+                # add leftover particles
+                for i in range(1, iccp3m_data.newParticleData.front().size()):
+                    currID.push_back(iccp3m_cfg.largestID)
+                    _system.part.add(id=iccp3m_cfg.largestID,
+                                     pos=[iccp3m_data.newParticleData.front()[i].pos[0],
+                                          iccp3m_data.newParticleData.front()[i].pos[1],
+                                          iccp3m_data.newParticleData.front()[i].pos[2]],
+                                     q=iccp3m_data.newParticleData.front()[i].charge,
+                                     area=iccp3m_data.newParticleData.front()[i].area,
+                                     eps=iccp3m_data.newParticleData.front()[i].eps,
+                                     sigma=iccp3m_data.newParticleData.front()[i].sigma,
+                                     displace=[iccp3m_data.newParticleData.front()[i].displace[0],
+                                              iccp3m_data.newParticleData.front()[i].displace[1],
+                                              iccp3m_data.newParticleData.front()[i].displace[2]],
+                                     normal=[iccp3m_data.newParticleData.front()[i].normal[0],
+                                             iccp3m_data.newParticleData.front()[i].normal[1],
+                                             iccp3m_data.newParticleData.front()[i].normal[2]],
+                                     iccTypeID=iccp3m_data.newParticleData.front()[i].iccTypeID,
+                                     type=iccp3m_data.newParticleData.front()[i].typeID)
+                    iccp3m_cfg.largestID += 1
+                    iccp3m_cfg.n_ic += 1
+                # remove vector from list
+                iccp3m_data.newParticleData.pop()
+                iccp3m_data.trackList.push_back(currID)
+
 
         def _activate_method(self):
             check_neutrality(self._params)
@@ -306,8 +377,77 @@ IF ELECTROSTATICS and P3M:
             # Broadcasts vars
             mpi_iccp3m_init()
 
-        def addToSystem(self):
-            print('hey!')
+        def rebuildData(self):
+            c_rebuildData(partCfg())
+
+        def splitParticles(self, _system):
+            c_splitParticles(partCfg())
+
+            self._addNewParticlesToSystem(_system)
+            c_rebuildData(partCfg())
+
+        def outputCharges(self):
+            c_getCharges(partCfg())
+            return iccp3m_data.iccCharges
+
+
+        def reduceParticles(self, _system, _force=False):
+            cdef set[int] noReduce
+            skip = False
+            summe = 0.;
+
+            c_getCharges(partCfg())
+
+            iccp3m_data.iccCharges
+
+            for vec in reversed(iccp3m_data.trackList):
+                skip = False
+
+                # check if any particle is unreducable
+                if _force or not any(noReduce.count(vec[i]) for i in range(len(vec))):
+                    # calculate charge sum
+                    for i in range(len(vec)):
+                        summe += iccp3m_data.iccCharges[i]
+                    if abs(summe) < iccp3m_data.minCharge:
+
+                        iccp3m_data.reducedPart.iccTypeID = _system.part[vec[0]].iccTypeID
+                        for i in range(3):
+                            iccp3m_data.reducedPart.pos[i] = _system.part[vec[0]].pos[i]
+                            iccp3m_data.reducedPart.displace[i] = _system.part[vec[0]].displace[i]
+
+                        c_reduceParticle()
+
+                        # delete other particles
+                        # update numMissingIDs if not the last ones <- problem here!
+
+                        part = _system.part[vec[0] + iccp3m_cfg.first_id]
+                        part.pos = [iccp3m_data.reducedPart.pos[0],
+                                    iccp3m_data.reducedPart.pos[1],
+                                    iccp3m_data.reducedPart.pos[2]]
+                        part.normal = [iccp3m_data.reducedPart.normal[0],
+                                       iccp3m_data.reducedPart.normal[1],
+                                       iccp3m_data.reducedPart.normal[2]]
+                        part.area = sum(_system.part[vec + iccp3m_cfg.first_id].area)
+                        part.q = sum(_system.part[vec + iccp3m_cfg.first_id].q)
+                        part.displace = [iccp3m_data.reducedPart.displace[0],
+                                         iccp3m_data.reducedPart.displace[1],
+                                         iccp3m_data.reducedPart.displace[2]]
+
+                        if vec[1] + iccp3m_cfg.first_id < (len(_system.part) - len(vec) + 1):
+                            iccp3m_data.missingIDs.insert(vec[1:])
+                        else:
+                            iccp3m_cfg.n_ic -= len(vec) - 1
+                            iccp3m_cfg.largestID -= len(vec) - 1
+                            c_checkSet(vec[1] - 1)
+
+                        _system.part[vec[1] + iccp3m_cfg.first_id:vec[-1] + iccp3m_cfg.first_id].remove()
+                else:
+                    noReduce.insert(vec)
+                    print(noReduce)
+                    # exit early if all particles are unsplittable
+                    if len(noReduce) >= iccp3m_cfg.n_ic:
+                        break
+            iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size()
 
         def addTypeWall(self, _normal, _dist, _cutoff, _transMatrix=None, _invMatrix=None):
             cdef Vector3d normal

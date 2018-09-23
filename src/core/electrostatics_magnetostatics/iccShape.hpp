@@ -23,7 +23,7 @@ struct NewParticle {
 class iccShape {
     public:
         virtual void splitExt(const Particle * p, std::queue<std::vector<NewParticle>> &newParticleData) = 0;
-        virtual void reduceExt(const Particle * p) = 0;
+        virtual void reduceExt(NewParticle & reducedPart) = 0;
         Vector3d cutoff;
     protected:
         iccShape(Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {

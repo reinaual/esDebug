@@ -61,11 +61,24 @@
 #include "Vector.hpp"
 #include "iccShape.hpp"
 #include <queue>
+#include <list>
+
+/* iccp3m store data struct */
+struct iccp3m_data_struct {
+  NewParticle reducedPart;
+  std::list<std::vector<int>> trackList;
+  std::vector<iccShape *> iccTypes;
+  std::queue<std::vector<NewParticle>> newParticleData;
+  std::vector<double> iccCharges;
+  double maxCharge = 0.;
+  double minCharge = 0.;
+  std::set<int> missingIDs;
+};
 
 /* iccp3m data structures*/
 struct iccp3m_struct {
-  std::vector<iccShape *> iccTypes;
-  std::queue<std::vector<NewParticle>> newParticleData;
+  int numMissingIDs = 0;
+  int largestID = 0;
   int n_ic;                  /* Last induced id (can not be smaller than 2) */
   int num_iteration = 30;    /* Number of max iterations                    */
   double eout = 1;           /* Dielectric constant of the bulk             */
@@ -82,8 +95,6 @@ struct iccp3m_struct {
       0; /* flag that indicates if ICCP3M has been initialized properly
           */
   int first_id = 0;
-  double maxCharge = 0.;
-  double minCharge = 0.;
 
   template <typename Archive>
   void serialize(Archive &ar, long int /* version */) {
@@ -103,6 +114,7 @@ struct iccp3m_struct {
   }
 };
 extern iccp3m_struct iccp3m_cfg; /* global variable with ICCP3M configuration */
+extern iccp3m_data_struct iccp3m_data;
 
 /** The main iterative scheme, where the surface element charges are calculated
  * self-consistently.
@@ -114,6 +126,11 @@ int iccp3m_iteration();
 void iccp3m_alloc_lists();
 
 void c_splitParticles(PartCfg &partCfg);
+void c_reduceParticle();
+
+void c_getCharges(PartCfg & partCfg);
+void c_rebuildData(PartCfg & partCfg);
+void c_checkSet(int ID);
 
 int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9]);
 

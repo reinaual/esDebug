@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <set>
 
 #include "electrostatics_magnetostatics/elc.hpp"
 #include "electrostatics_magnetostatics/mmm1d.hpp"
@@ -57,6 +58,7 @@
 #ifdef ELECTROSTATICS
 
 iccp3m_struct iccp3m_cfg;
+iccp3m_data_struct iccp3m_data;
 
 /* functions that are used in icc* to compute the electric field acting on the
  * induced charges, excluding forces other than the electrostatic ones */
@@ -126,7 +128,7 @@ inline void add_non_bonded_pair_force_iccp3m(Particle *p1, Particle *p2,
 }
 
 void iccp3m_alloc_lists() {
-  auto const n_ic = iccp3m_cfg.n_ic;
+  auto const n_ic = iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs;
 
   iccp3m_cfg.areas.resize(n_ic);
   iccp3m_cfg.ein.resize(n_ic);
@@ -161,7 +163,7 @@ int iccp3m_iteration() {
     double diff = 0;
 
     for (auto &p : local_cells.particles()) {
-      if (p.p.identity < iccp3m_cfg.n_ic + iccp3m_cfg.first_id &&
+      if (p.p.identity < iccp3m_cfg.n_ic + iccp3m_cfg.first_id + iccp3m_cfg.numMissingIDs &&
           p.p.identity >= iccp3m_cfg.first_id) {
         auto const id = p.p.identity - iccp3m_cfg.first_id;
         /* the dielectric-related prefactor: */
@@ -306,26 +308,76 @@ void calc_long_range_forces_iccp3m() {
 
 int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9]) {
   iccWall * wall = new iccWall(normal, dist, cutoff, useTrans, &transMatrix[0], &invMatrix[0]);
-  iccp3m_cfg.iccTypes.push_back(wall);
-  return iccp3m_cfg.iccTypes.size();
+  iccp3m_data.iccTypes.push_back(wall);
+  return iccp3m_data.iccTypes.size();
 }
 
 void c_splitParticles(PartCfg &partCfg) {
   for (auto &p : partCfg) {
-    if (p.p.identity < iccp3m_cfg.n_ic + iccp3m_cfg.first_id &&
+    if (p.p.identity < iccp3m_cfg.n_ic + iccp3m_cfg.first_id + iccp3m_cfg.numMissingIDs &&
         p.p.identity >= iccp3m_cfg.first_id &&
-        fabs(p.p.q) > iccp3m_cfg.maxCharge) {
+        std::abs(p.p.q) > iccp3m_data.maxCharge) {
           // check if particle is splittable
-          iccShape * shapePointer = iccp3m_cfg.iccTypes[p.adapICC.iccTypeID];
-          if (shapePointer->cutoff[0] >= p.adapICC.displace[0] &&
-              shapePointer->cutoff[1] >= p.adapICC.displace[1] &&
-              shapePointer->cutoff[2] >= p.adapICC.displace[2]) {
+          iccShape * shapePointer = iccp3m_data.iccTypes[p.adapICC.iccTypeID];
+          if (shapePointer->cutoff[0] <= p.adapICC.displace[0] &&
+              shapePointer->cutoff[1] <= p.adapICC.displace[1] &&
+              shapePointer->cutoff[2] <= p.adapICC.displace[2]) {
                 // split this particle
-                shapePointer->splitExt(&p, iccp3m_cfg.newParticleData);
+                shapePointer->splitExt(&p, iccp3m_data.newParticleData);
           }
     }
   }
-  // call function to create arrays from newPArticleData;
+}
+
+
+void c_getCharges(PartCfg & partCfg) {
+  iccp3m_data.iccCharges.resize(iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs);
+
+  for (auto &p : partCfg) {
+    if (p.p.identity < iccp3m_cfg.n_ic + iccp3m_cfg.first_id + iccp3m_cfg.numMissingIDs &&
+        p.p.identity >= iccp3m_cfg.first_id) {
+          iccp3m_data.iccCharges[p.p.identity - iccp3m_cfg.first_id] = p.p.q;
+    }
+  }
+}
+
+void c_reduceParticle() {
+  iccp3m_data.iccTypes[iccp3m_data.reducedPart.iccTypeID]->reduceExt(iccp3m_data.reducedPart);
+  // this call might not be necessary! -> direct call from cython
+}
+
+void c_rebuildData(PartCfg & partCfg) {
+  iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size();
+  iccp3m_alloc_lists();
+
+  for (auto &p : partCfg) {
+    auto const id = p.p.identity - iccp3m_cfg.first_id;
+    if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
+        id >= 0) {
+          iccp3m_cfg.areas[id] = p.adapICC.area;
+          iccp3m_cfg.ein[id] = p.adapICC.eps;
+          iccp3m_cfg.sigma[id] = p.adapICC.sigma;
+          for (int i = 0; i < 3; i++) {
+            iccp3m_cfg.normals[id][i] = p.adapICC.normal[i];
+          }
+    }
+  }
+
+  mpi_iccp3m_init();
+}
+
+void c_checkSet(int ID) {
+  auto it = iccp3m_data.missingIDs.end();
+  while (it != iccp3m_data.missingIDs.begin()) {
+    if (*(--it) == ID) {
+      iccp3m_data.missingIDs.erase(it);
+      iccp3m_cfg.largestID--;
+      iccp3m_cfg.n_ic--;
+      ID--;
+    } else {
+      break;
+    }
+  }
 }
 
 
