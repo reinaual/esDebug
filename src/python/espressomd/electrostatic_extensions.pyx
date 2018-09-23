@@ -358,7 +358,8 @@ IF ELECTROSTATICS and P3M:
                                              iccp3m_data.newParticleData.front()[i].normal[1],
                                              iccp3m_data.newParticleData.front()[i].normal[2]],
                                      iccTypeID=iccp3m_data.newParticleData.front()[i].iccTypeID,
-                                     type=iccp3m_data.newParticleData.front()[i].typeID)
+                                     type=iccp3m_data.newParticleData.front()[i].typeID,
+                                     fix=[1, 1, 1])
                     iccp3m_cfg.largestID += 1
                     iccp3m_cfg.n_ic += 1
                 # remove vector from list

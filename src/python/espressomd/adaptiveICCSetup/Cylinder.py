@@ -3,29 +3,24 @@ import pickle
 from numpy.linalg import inv
 
 
-class SetupWall(object):
+class SetupCylinder(object):
 
-    def __init__(self, system, dist, normal, nICC, transMatrix=None, invMatrix=None, typeIDoffset=None):
-
-        if hasattr(normal, '__iter__'):
-            self.normal = np.array(normal, dtype=float)
-
-            if self.normal.size != 3:
-                raise ValueError('normal argument should be an array of size 3')
-        else:
-            raise TypeError('normal argument should be an array of size 3')
-
-        if not (isinstance(dist, float) or isinstance(dist, int)):
-            raise TypeError('dist argument has to be a float!')
-
-        if not isinstance(nICC, int):
-            raise TypeError('number of icc particles has to be an int')
+    def __init__(self, system, center, axis, length, radius, nCylinderPhi, nCylinderZ, direction=1, transMatrix=None, invMatrix=None, typeIDoffset=None):
 
         self.system = system
-        self.dist = dist
-        self.nICC = nICC
-        self.pos = self.normal / np.sqrt(np.sum(np.square(self.normal))) * self.dist
+        self.center = np.array(center, dtype=float)
+        self.axis = np.array(axis, dtype=float)
+        self.length = length
+        self.radius = radius
+        self.nCylinderPhi = nCylinderPhi
+        self.nCylinderZ = nCylinderZ
+        self.direction = direction
         self.splitCutoff = 0.
+
+        if all(self.axis == np.array([0., 0., 1.])):
+            self.useTrans = False
+        else:
+            self.useTrans = True
 
         if transMatrix is not None and invMatrix is not None:
             # use given matrices
@@ -39,7 +34,7 @@ class SetupWall(object):
         else:
             # calculate transformation matix
             # plane normal is ez
-            ez = self.normal / np.sqrt(np.sum(np.square(self.normal)))
+            ez = self.axis / np.sqrt(np.sum(np.square(self.axis)))
 
             # Find a vector orthogonal to ez, since {1,0,0} and {0,1,0} are independent, ez can not be parallel to both of them. Then we can do Gram-Schmidt
             if (np.dot(np.array([1., 0., 0.]), ez) < 1.):
@@ -62,19 +57,16 @@ class SetupWall(object):
                     "Calculated transformation matrix is not invertible!")
 
     def _registerTypes(self, icc):
-
-        if all(self.normal == [0., 0., 1.]):
-            self.useTrans = False
-        else:
-            self.useTrans = True
-
         # register types to ICC!
-        self.typeIDoffset = icc.addTypeWall(_normal=self.normal,
-                                 _dist=self.dist,
-                                 _cutoff=self.splitCutoff,
-                                 _useTrans=self.useTrans,
-                                 _transMatrix=self.transMatrix.flatten(),
-                                 _invMatrix=self.invMatrix.flatten())
+        self.typeIDoffset = icc.addTypeCylinder(_center=self.center,
+                                                _axis=self.axis,
+                                                _length=self.length,
+                                                _radius=self.radius,
+                                                _direction=self.direction,
+                                                _cutoff=self.splitCutoff,
+                                                _useTrans=self.useTrans,
+                                                _transMatrix=self.transMatrix.flatten(),
+                                                _invMatrix=self.invMatrix.flatten())
 
 
     def initParticles(self, particleTypeID, iccTypeID, initCharge, sigma, epsilon, splitCutoff=0.):
@@ -135,23 +127,37 @@ class SetupWall(object):
 #                                 _transMatrix=transMatrix.flatten(),
 #                                 _invMatrix=invMatrix.flatten())
 
+        if self.nCylinderPhi > 0 and self.nCylinderZ > 0:
+            DeltaPhi = 2. * np.pi / self.nCylinderPhi
+            DeltaZ = self.length / self.nCylinderZ
 
-        dx = self.system.box_l[0] / self.nICC
-        dy = self.system.box_l[1] / self.nICC
+            # cylinder particles
+            for Iphi in range(self.nCylinderPhi):
+                phi = (Iphi + 0.5) * DeltaPhi
+                for IZ in range(-int(self.nCylinderZ / 2), int(self.nCylinderZ / 2) + 1):
+                    z = IZ * DeltaZ
 
-        area = self.system.box_l[0] * self.system.box_l[1] / (self.nICC * self.nICC)
+                    pos = self.calcCylPart(phi, z, np.array([0., DeltaPhi / 2., DeltaZ / 2.]))
 
-        for i in range(self.nICC):
-            x = (i + 0.5) * dx
-            for j in range(self.nICC):
-                y = (j + 0.5) * dy
-                self.system.part.add(pos=np.dot(self.transMatrix, self.pos + [x, y, 0.]),
+                    self.system.part.add(pos=np.dot(self.transMatrix, pos[0]),
                                          q=initCharge,
-                                         normal=np.array([0., 0., 1.]),
-                                         area=area,
+                                         normal=np.dot(self.transMatrix, pos[1]),
+                                         area=pos[2],
                                          sigma=sigma,
                                          eps=epsilon,
-                                         displace=[dx / 2., dy / 2., 0.],
+                                         displace=[0., DeltaPhi / 2., DeltaZ / 2.],
                                          iccTypeID=iccTypeID,
                                          type=particleTypeID,
                                          fix=[1, 1, 1])
+
+
+    def calcCylPart(self, phi, z, dxdydz):
+        '''
+            calculate positions for the cylinder part. Area is calculated by 4 * R * dphi * dz
+        '''
+
+        pos = np.array([self.radius * np.cos(phi),
+                        self.radius * np.sin(phi), z])
+        norm = self.direction * pos.copy()
+        norm[2] = 0.
+        return [pos + self.center, norm / np.sqrt(np.sum(np.square(norm))), 4. * self.radius * dxdydz[1] * dxdydz[2]]
