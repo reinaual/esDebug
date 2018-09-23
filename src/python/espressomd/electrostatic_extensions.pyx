@@ -454,13 +454,13 @@ IF ELECTROSTATICS and P3M:
             cdef double dist
             cdef Vector3d cutoff
             cdef bool useTrans
-            cdef double transMatrix[9] = [1., 0., 0., 0., 1., 0., 0., 0., 1.]
-            cdef double invMatrix[9] = [1., 0., 0., 0., 1., 0., 0., 0., 1.]
+            cdef double transMatrix[9]
+            cdef double invMatrix[9]
 
             check_type_or_throw_except(_normal, 3, float, "normal has to be floats")
             check_type_or_throw_except(_dist, 1, float, "dist has to be float")
             check_type_or_throw_except(_cutoff, 3, float, "cutoff has to be floats")
-            check_type_or_throw_except(_useTras, 1, bool, "useTrans has to be integer")
+            check_type_or_throw_except(_useTrans, 1, int, "useTrans has to be integer")
             for i in range(3):
                 normal[i] = _normal[i]
                 cutoff[i] = _cutoff[i]
