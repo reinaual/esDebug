@@ -14,7 +14,10 @@ void iccWall::reduceExt(NewParticle & reducedPart) {
 
 void iccWall::splitExt(const Particle * p, std::queue<std::vector<NewParticle>> &newParticleData) {
     // split to 4 new particles
-    Vector3d pos = p->r.p;
+    Vector3d pos;
+    for (int i = 0; i < 3; i++) {
+      pos[i] = p->r.p[i];
+    }
     const Vector3d temp = useTrans ? matrixMul(pos, invMatrix) : pos;
     const double chargedensity = p->p.q / p->adapICC.area;
     const Vector3d newdisplace = p->adapICC.displace / 2.0;
@@ -55,7 +58,7 @@ void iccWall::splitExt(const Particle * p, std::queue<std::vector<NewParticle>> 
     newParticleData.push(newP);
 }
 
-iccWall::iccWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) : iccShape::iccShape(cutoff, useTrans, transMatrix, invMatrix) {
+iccWall::iccWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) : iccShape(cutoff, useTrans, transMatrix, invMatrix) {
     this->normal = normal;
     this->dist = dist;
 }

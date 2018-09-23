@@ -2,7 +2,10 @@ import numpy as np
 from numpy.linalg import inv
 
 
-def setupAdaptiveICCWall(system, icc, dist, normal, nWall, cutoff, initCharge, sigma, eps, particleType, transMatrix=None, invMatrix=None):
+class SetupAdaptiveICCWall(object):
+
+    def __init__(self, system, )
+ setupAdaptiveICCWall(system, icc, dist, normal, nWall, cutoff, initCharge, sigma, eps, particleType, transMatrix=None, invMatrix=None):
     normal = np.array(normal, dtype=float) / np.sqrt(np.sum(np.square(normal)))
     pos = normal * dist
 
@@ -44,28 +47,32 @@ def setupAdaptiveICCWall(system, icc, dist, normal, nWall, cutoff, initCharge, s
         useTrans = False
     else:
         useTrans = True
+    
+    print(transMatrix)
+    print(invMatrix)
     # register types to ICC!
     wallID = icc.addTypeWall(_normal=normal,
                              _dist=dist,
                              _cutoff=cutoff,
                              _useTrans=useTrans,
-                             _transMatrix=transMatrix,
-                             _invMatrix=invMatrix)
+                             _transMatrix=transMatrix.flatten(),
+                             _invMatrix=invMatrix.flatten())
 
     # init particles
     dx = system.box_l[0] / nWall
-            dy = system.box_l[1] / nWall
-            area = dx * dy
-            for i in range(nWall):
-                x = (i + 0.5) * dx
-                for j in range(nWall):
-                    y = (j + 0.5) * dy
-                    system.part.add(pos=np.dot(transMatrix, pos + [x, y, 0.]),
-                                    q=_initCharge,
-                                    normal=normal,
-                                    area=area,
-                                    sigma=_sigma,
-                                    eps=_eps,
-                                    displace=[dx/2., dy/2., 0.],
-                                    type=particleType,
-                                    iccTypeID=wallID)
+    dy = system.box_l[1] / nWall
+    area = dx * dy
+    for i in range(nWall):
+        x = (i + 0.5) * dx
+        for j in range(nWall):
+            y = (j + 0.5) * dy
+            system.part.add(pos=np.dot(transMatrix, pos + [x, y, 0.]),
+                            q=initCharge,
+                            normal=normal,
+                            area=area,
+                            sigma=sigma,
+                            eps=eps,
+                            displace=[dx/2., dy/2., 0.],
+                            type=particleType,
+                            iccTypeID=wallID)
+    

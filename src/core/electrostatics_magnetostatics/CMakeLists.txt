@@ -14,6 +14,7 @@ add_library(electrostatics_magnetostatics_core SHARED
     p3m_gpu.cpp
     scafacos.cpp
     iccWall.cpp
+    iccShape.cpp
 )
 
 if(CUDA)

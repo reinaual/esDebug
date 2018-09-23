@@ -61,6 +61,7 @@ file(COPY MDA_ESP DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 SET(cython_AUX  "${cython_AUX}" CACHE INTERNAL "cython_AUX")
 
 add_subdirectory(io)
+add_subdirectory(adaptiveICCSetup)
 
 list(APPEND cython_SRC ${CMAKE_CURRENT_BINARY_DIR}/code_info.pyx)
 list(REMOVE_DUPLICATES cython_SRC)

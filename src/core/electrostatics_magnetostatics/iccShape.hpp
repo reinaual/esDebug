@@ -5,6 +5,7 @@
 #include "Vector.hpp"
 #include <queue>
 
+Vector3d matrixMul(const Vector3d & vec, double * transMatrix);
 
 struct NewParticle {
   int parentID;
@@ -38,8 +39,5 @@ class iccShape {
         double transMatrix[9];
         double invMatrix[9];
 };
-
-
-Vector3d matrixMul(const Vector3d & vec, double * transMatrix);
 
 #endif

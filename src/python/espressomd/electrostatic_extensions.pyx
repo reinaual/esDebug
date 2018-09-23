@@ -158,7 +158,6 @@ IF ELECTROSTATICS and P3M:
         """
 
         def validate_params(self):
-            print(self._params)
             default_params = self.default_params()
 
             check_type_or_throw_except(self._params["n_icc"], 1, int, "")
@@ -242,7 +241,7 @@ IF ELECTROSTATICS and P3M:
                     "ext_field": [0, 0, 0],
                     "max_iterations": 100,
                     "first_id": 0,
-                    "esp_out": 1,
+                    "eps_out": 1,
                     "normals": [],
                     "areas": [],
                     "sigmas": [],
@@ -319,9 +318,11 @@ IF ELECTROSTATICS and P3M:
             mpi_iccp3m_init()
 
         def _addNewParticlesToSystem(self, _system):
+            rerun = False
             cdef vector[int] currID
             # loop over all particles to split
             while (iccp3m_data.newParticleData.size() != 0):
+                rerun = True
                 currID.clear()
                 # first particle is only modified
                 currID.push_back(iccp3m_data.newParticleData.front()[0].parentID)
@@ -363,6 +364,7 @@ IF ELECTROSTATICS and P3M:
                 # remove vector from list
                 iccp3m_data.newParticleData.pop()
                 iccp3m_data.trackList.push_back(currID)
+            return rerun
 
 
         def _activate_method(self):
@@ -380,15 +382,20 @@ IF ELECTROSTATICS and P3M:
         def rebuildData(self):
             c_rebuildData(partCfg())
 
-        def splitParticles(self, _system):
+        def splitParticles(self, _system, rerun=True):
             c_splitParticles(partCfg())
 
-            self._addNewParticlesToSystem(_system)
-            c_rebuildData(partCfg())
+            if self._addNewParticlesToSystem(_system):
+                c_rebuildData(partCfg())
+                if rerun:
+                    self.splitParticles(_system)
 
         def outputCharges(self):
             c_getCharges(partCfg())
             return iccp3m_data.iccCharges
+
+        def newParticles(self, _number):
+            iccp3m_cfg.n_ic = _number
 
 
         def reduceParticles(self, _system, _force=False):
@@ -448,6 +455,7 @@ IF ELECTROSTATICS and P3M:
                     if len(noReduce) >= iccp3m_cfg.n_ic:
                         break
             iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size()
+            c_rebuildData(partCfg())
 
         def addTypeWall(self, _normal, _dist, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
             cdef Vector3d normal
@@ -466,7 +474,7 @@ IF ELECTROSTATICS and P3M:
                 cutoff[i] = _cutoff[i]
             dist = _dist
 
-            if _transMatrix and _invMatrix:
+            if _transMatrix is not None and _invMatrix is not None:
                 check_type_or_throw_except(_transMatrix, 9, float, "Matrix has to be 9 floats")
                 check_type_or_throw_except(_invMatrix, 9, float, "Matrix has to be 9 floats")
                 for i in range(9):

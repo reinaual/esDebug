@@ -10,7 +10,6 @@ class iccWall : public iccShape {
         iccWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix);
         void splitExt(const Particle * p, std::queue<std::vector<NewParticle>> &newParticleData);
         void reduceExt(NewParticle & reducedPart);
-    private:
         Vector3d normal;
         double dist;
         int newParticles = 3;
