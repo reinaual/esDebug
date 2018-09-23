@@ -388,7 +388,7 @@ IF ELECTROSTATICS and P3M:
             if self._addNewParticlesToSystem(_system):
                 c_rebuildData(partCfg())
                 if rerun:
-                    self.splitParticles(_system)
+                    self.splitParticles(_system, rerun=True)
 
         def outputCharges(self):
             c_getCharges(partCfg())

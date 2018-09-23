@@ -323,7 +323,7 @@ void c_splitParticles(PartCfg &partCfg) {
               shapePointer->cutoff[1] <= p.adapICC.displace[1] &&
               shapePointer->cutoff[2] <= p.adapICC.displace[2]) {
                 // split this particle
-                shapePointer->splitExt(&p, iccp3m_data.newParticleData);
+                shapePointer->splitExt(p, iccp3m_data.newParticleData);
           }
     }
   }

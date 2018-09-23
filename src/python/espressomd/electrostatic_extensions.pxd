@@ -30,7 +30,6 @@ from libcpp.set cimport set
 from utils cimport Vector3d
 from cython.operator cimport dereference as deref, preincrement as inc
 from libcpp cimport bool
-from libcpp.memory cimport unique_ptr
 
 
 cdef extern from "PartCfg.hpp":
