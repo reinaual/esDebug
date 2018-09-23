@@ -39,4 +39,7 @@ class iccShape {
         double invMatrix[9];
 };
 
+
+Vector3d matrixMul(const Vector3d & vec, double * transMatrix);
+
 #endif
