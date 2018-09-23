@@ -14,7 +14,7 @@ void iccWall::reduceExt(NewParticle & reducedPart) {
 
 void iccWall::splitExt(const Particle * p, std::queue<std::vector<NewParticle>> &newParticleData) {
     // split to 4 new particles
-    const Vector3d temp = p->r.p;
+    const Vector3d temp = matrixMul(p->r.p, invMatrix) ? useTrans : p->r.p;
     const double chargedensity = p->p.q / p->adapICC.area;
     const Vector3d newdisplace = p->adapICC.displace / 2.0;
     const double newArea = 4.0 * newdisplace[0] * newdisplace[1];
@@ -24,7 +24,7 @@ void iccWall::splitExt(const Particle * p, std::queue<std::vector<NewParticle>> 
     newP[0].parentID = p->p.identity;
     newP[0].iccTypeID = p->adapICC.iccTypeID;
     newP[0].typeID = p->p.type;
-    newP[0].normal = p->adapICC.normal;
+    newP[0].normal = normal;
     newP[0].displace = newdisplace;
     newP[0].eps = p->adapICC.eps;
     newP[0].sigma = p->adapICC.sigma;
@@ -35,7 +35,7 @@ void iccWall::splitExt(const Particle * p, std::queue<std::vector<NewParticle>> 
         newP[i].parentID = 0;
         newP[i].iccTypeID = p->adapICC.iccTypeID;
         newP[i].typeID = p->p.type;
-        newP[i].normal = p->adapICC.normal;
+        newP[i].normal = normal;
         newP[i].displace = newdisplace;
         newP[i].eps = p->adapICC.eps;
         newP[i].sigma = p->adapICC.sigma;
@@ -43,18 +43,18 @@ void iccWall::splitExt(const Particle * p, std::queue<std::vector<NewParticle>> 
         newP[i].charge = newP[0].charge;
     }
     Vector3d t = {newdisplace[0], newdisplace[1], 0.0};
-    newP[0].pos = temp + t;
+    newP[0].pos = matrixMul(temp + t, transMatrix) ? useTrans : temp + t;
     t = {-newdisplace[0], newdisplace[1], 0.0};
-    newP[1].pos = temp + t;
+    newP[1].pos = _systemmatrixMul(temp + t, transMatrix) ? useTrans : temp + t;
     t = {newdisplace[0], -newdisplace[1], 0.0};
-    newP[2].pos = temp + t;
+    newP[2].pos = _systemmatrixMul(temp + t, transMatrix) ? useTrans : temp + t;
     t = {-newdisplace[0], -newdisplace[1], 0.0};
-    newP[3].pos = temp + t;
+    newP[3].pos = _systemmatrixMul(temp + t, transMatrix) ? useTrans : temp + t;
 
     newParticleData.push(newP);
 }
 
 iccWall::iccWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) : iccShape::iccShape(cutoff, useTrans, transMatrix, invMatrix) {
-    this->normal = normal;
+    this->normal = normal.normalize();
     this->dist = dist;
 }
