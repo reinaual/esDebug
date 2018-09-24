@@ -391,7 +391,6 @@ IF ELECTROSTATICS and P3M:
             mpi_iccp3m_init()
 
         def splitParticles(self, _system, _rerun=True, _force=False):
-            print('Splitting! {}'.format(iccp3m_cfg.n_ic))
             c_splitParticles(partCfg(), _force)
 
             if self._addNewParticlesToSystem(_system):
@@ -427,6 +426,7 @@ IF ELECTROSTATICS and P3M:
                         for i in range(3):
                             iccp3m_data.reducedPart.pos[i] = _system.part[vec[0]].pos[i]
                             iccp3m_data.reducedPart.displace[i] = _system.part[vec[0]].displace[i]
+                            iccp3m_data.reducedPart.normal[i] = _system.part[vec[0]].normal[i]
 
                         c_reduceParticle()
 
@@ -454,7 +454,7 @@ IF ELECTROSTATICS and P3M:
                             for i in range(1, len(vec)):
                                 iccp3m_data.missingIDs.insert(vec[i])
 
-                        print('{} - {}'.format(vec, len(_system.part)))
+                        # print('{} - {}'.format(vec, len(_system.part)))
                         _system.part[vec[1]:vec[-1]+1].remove()
                         iccp3m_data.trackList.remove(vec)
                 else:
@@ -471,22 +471,16 @@ IF ELECTROSTATICS and P3M:
             if (c_outputVTK(utils.to_char_pointer(_filename), partCfg())):
                 print('Something seemed to went wrong!')
 
-        def addTypeWall(self, _normal, _dist, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
-            cdef Vector3d normal
-            cdef double dist
+        def addTypeWall(self, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
             cdef Vector3d cutoff
             cdef bool useTrans
             cdef double transMatrix[9]
             cdef double invMatrix[9]
 
-            check_type_or_throw_except(_normal, 3, float, "normal has to be floats")
-            check_type_or_throw_except(_dist, 1, float, "dist has to be float")
             check_type_or_throw_except(_cutoff, 3, float, "cutoff has to be floats")
             check_type_or_throw_except(_useTrans, 1, int, "useTrans has to be integer")
             for i in range(3):
-                normal[i] = _normal[i]
                 cutoff[i] = _cutoff[i]
-            dist = _dist
 
             if _transMatrix is not None and _invMatrix is not None:
                 check_type_or_throw_except(_transMatrix, 9, float, "Matrix has to be 9 floats")
@@ -497,7 +491,7 @@ IF ELECTROSTATICS and P3M:
 
             useTrans = _useTrans
 
-            return c_addTypeWall(normal, dist, cutoff, useTrans, transMatrix, invMatrix)
+            return c_addTypeWall(cutoff, useTrans, transMatrix, invMatrix)
 
         def addTypeCylinder(self, _center, _axis, _length, _radius, _direction, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
             cdef Vector3d center
@@ -575,9 +569,8 @@ IF ELECTROSTATICS and P3M:
 
             return c_addTypeTorus(center, axis, length, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix)
 
-        def addTypeInterface(self, _center, _axis, _radius, _smoothingRadius, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
+        def addTypeInterface(self,_center, _radius, _smoothingRadius, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
             cdef Vector3d center
-            cdef Vector3d axis
             cdef Vector3d cutoff
             cdef double radius
             cdef double smoothingRadius
@@ -586,7 +579,6 @@ IF ELECTROSTATICS and P3M:
             cdef double invMatrix[9]
 
             check_type_or_throw_except(_center, 3, float, "center has to be floats")
-            check_type_or_throw_except(_axis, 3, float, "axis has to be floats")
             check_type_or_throw_except(_radius, 1, float, "radius has to be float")
             check_type_or_throw_except(_smoothingRadius, 1, float, "smoothingRadius has to be float")
             check_type_or_throw_except(_cutoff, 3, float, "cutoff has to be floats")
@@ -594,7 +586,6 @@ IF ELECTROSTATICS and P3M:
 
             for i in range(3):
               center[i] = _center[i]
-              axis[i] = _axis[i]
               cutoff[i] = _cutoff[i]
             radius = _radius
             smoothingRadius = _smoothingRadius
@@ -608,4 +599,4 @@ IF ELECTROSTATICS and P3M:
 
             useTrans = _useTrans
 
-            return c_addTypeInterface(center, axis, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix)
+            return c_addTypeInterface(center, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix)

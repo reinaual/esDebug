@@ -8,7 +8,7 @@
 
 void iccInterface::reduceExt(NewParticle & reducedPart) {
     // position is in cylindrical coordinates
-    Vector3d pos = useTrans ? matrixMul(reducedPart.pos - center, invMatrix) : reducedPart.pos - center;
+    Vector3d pos = useTrans ? matrixMul(reducedPart.pos, invMatrix) : reducedPart.pos;
 
     if (reducedPart.displace[0] > 0.) {
         // horizontal displacement
@@ -36,8 +36,8 @@ void iccInterface::reduceExt(NewParticle & reducedPart) {
         }
     }
 
-    reducedPart.pos = (useTrans ? matrixMul(pos, transMatrix) : pos) + center;
-    reducedPart.normal = pos[2] > 0 ? axis : -axis;
+    reducedPart.pos = (useTrans ? matrixMul(pos, transMatrix) : pos);
+    // normal stays the same
     reducedPart.displace = reducedPart.displace * 2.;
 }
 
@@ -75,6 +75,9 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         } else {
             newP[1].pos[1] = - 0.5 * (radiusOuter + temp);
         }
+
+        newP[0].area = calcArea(pos[0], pos[0] + p.adapICC.displace[0]);
+        newP[1].area = calcArea(pos[0] - p.adapICC.displace[0], pos[0]);
     } else {
         // vertical displacement
         newP[0].pos[1] = pos[1] + newdisplace[1];
@@ -103,6 +106,9 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         } else {
             newP[1].pos[0] = - 0.5 * (radiusOuter + temp);
         }
+
+        newP[0].area = calcArea(pos[1], pos[1] + p.adapICC.displace[1]);
+        newP[1].area = calcArea(pos[1] - p.adapICC.displace[1], pos[1]);
     }
 
     newP[0].parentID = p.p.identity;
@@ -119,19 +125,11 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         newP[i].displace = newdisplace;
         newP[i].eps = p.adapICC.eps;
         newP[i].sigma = p.adapICC.sigma;
+        newP[i].pos = newP[i].pos + center;
     }
 
-    if (pos[2] > 0.) {
-        newP[0].normal = axis;
-        newP[1].normal = axis;
-    } else {
-        newP[0].normal = -axis;
-        newP[1].normal = -axis;
-    }
-
-
-    newP[0].area = calcArea(pos[0], pos[0] + p.adapICC.displace[0]);
-    newP[1].area = calcArea(pos[0], pos[0] - p.adapICC.displace[0]);
+    newP[0].normal = p.adapICC.normal;
+    newP[1].normal = p.adapICC.normal;
 
     newParticleData.push(newP);
 }
@@ -161,9 +159,8 @@ double iccInterface::calcArea(double x0, double x1) {
     return out;
 }
 
-iccInterface::iccInterface(Vector3d center, Vector3d axis, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) : iccShape::iccShape(cutoff, useTrans, transMatrix, invMatrix) {
+iccInterface::iccInterface(Vector3d center, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) : iccShape::iccShape(cutoff, useTrans, transMatrix, invMatrix) {
     this->center = center;
-    this->axis = axis;
     this->radius = radius;
     this->smoothingRadius = smoothingRadius;
     this->radiusOuter = radius + smoothingRadius;

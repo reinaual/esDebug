@@ -56,19 +56,19 @@ void iccCylinder::splitExt(const Particle & p, std::queue<std::vector<NewParticl
     std::pair<Vector3d, Vector3d> result;
     result = calcCylPart(phi + newdisplace[1], pos[2] + newdisplace[2]);
     newP[0].pos = (useTrans ? matrixMul(result.first, transMatrix) : result.first) + center;
-    newP[0].normal = (useTrans ? matrixMul(result.second, transMatrix) : result.second) + center;
+    newP[0].normal = useTrans ? matrixMul(result.second, transMatrix) : result.second;
 
     result = calcCylPart(phi + newdisplace[1], pos[2] - newdisplace[2]);
     newP[1].pos = (useTrans ? matrixMul(result.first, transMatrix) : result.first) + center;
-    newP[1].normal = (useTrans ? matrixMul(result.second, transMatrix) : result.second) + center;
+    newP[1].normal = useTrans ? matrixMul(result.second, transMatrix) : result.second;
 
     result = calcCylPart(phi - newdisplace[1], pos[2] + newdisplace[2]);
     newP[2].pos = (useTrans ? matrixMul(result.first, transMatrix) : result.first) + center;
-    newP[2].normal = (useTrans ? matrixMul(result.second, transMatrix) : result.second) + center;
+    newP[2].normal = useTrans ? matrixMul(result.second, transMatrix) : result.second;
 
     result = calcCylPart(phi - newdisplace[1], pos[2] - newdisplace[2]);
     newP[3].pos = (useTrans ? matrixMul(result.first, transMatrix) : result.first) + center;
-    newP[3].normal = (useTrans ? matrixMul(result.second, transMatrix) : result.second) + center;
+    newP[3].normal = useTrans ? matrixMul(result.second, transMatrix) : result.second;
 
     newParticleData.push(newP);
 }

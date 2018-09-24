@@ -56,7 +56,7 @@ class SetupCylinder(object):
                 raise ValueError(
                     "Calculated transformation matrix is not invertible!")
 
-    def _registerTypes(self, icc):
+    def registerTypes(self, icc):
         # register types to ICC!
         self.typeIDoffset = icc.addTypeCylinder(_center=self.center,
                                                 _axis=self.axis,
@@ -130,7 +130,6 @@ class SetupCylinder(object):
         if self.nCylinderPhi > 0 and self.nCylinderZ > 0:
             DeltaPhi = 2. * np.pi / self.nCylinderPhi
             DeltaZ = self.length / self.nCylinderZ
-y
             # cylinder particles
             for Iphi in range(self.nCylinderPhi):
                 phi = (Iphi + 0.5) * DeltaPhi

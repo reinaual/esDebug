@@ -61,7 +61,7 @@ class SetupWall(object):
                 raise ValueError(
                     "Calculated transformation matrix is not invertible!")
 
-    def _registerTypes(self, icc):
+    def registerTypes(self, icc):
 
         if all(self.normal == [0., 0., 1.]):
             self.useTrans = False
@@ -69,9 +69,7 @@ class SetupWall(object):
             self.useTrans = True
 
         # register types to ICC!
-        self.typeIDoffset = icc.addTypeWall(_normal=self.normal,
-                                 _dist=self.dist,
-                                 _cutoff=self.splitCutoff,
+        self.typeIDoffset = icc.addTypeWall(_cutoff=self.splitCutoff,
                                  _useTrans=self.useTrans,
                                  _transMatrix=self.transMatrix.flatten(),
                                  _invMatrix=self.invMatrix.flatten())

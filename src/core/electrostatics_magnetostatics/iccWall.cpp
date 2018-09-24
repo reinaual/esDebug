@@ -6,13 +6,14 @@
 #include <queue>
 
 void iccWall::reduceExt(NewParticle & reducedPart) {
+    // normal vector stays the same
     Vector3d t = {reducedPart.displace[0], reducedPart.displace[1], 0.0};
     reducedPart.pos -= t;
-    reducedPart.normal = normal;
     reducedPart.displace = reducedPart.displace * 2.;
 }
 
 void iccWall::splitExt(const Particle & p, std::queue<std::vector<NewParticle>> &newParticleData) {
+    fprintf(stderr, "got to split");
     // split to 4 new particles
     const Vector3d temp = useTrans ? matrixMul(p.r.p, invMatrix) : p.r.p;
     const double chargedensity = p.p.q / p.adapICC.area;
@@ -24,7 +25,7 @@ void iccWall::splitExt(const Particle & p, std::queue<std::vector<NewParticle>> 
     newP[0].parentID = p.p.identity;
     newP[0].iccTypeID = p.adapICC.iccTypeID;
     newP[0].typeID = p.p.type;
-    newP[0].normal = normal;
+    newP[0].normal = p.adapICC.normal;
     newP[0].displace = newdisplace;
     newP[0].eps = p.adapICC.eps;
     newP[0].sigma = p.adapICC.sigma;
@@ -35,7 +36,7 @@ void iccWall::splitExt(const Particle & p, std::queue<std::vector<NewParticle>> 
         newP[i].parentID = 0;
         newP[i].iccTypeID = p.adapICC.iccTypeID;
         newP[i].typeID = p.p.type;
-        newP[i].normal = normal;
+        newP[i].normal = p.adapICC.normal;
         newP[i].displace = newdisplace;
         newP[i].eps = p.adapICC.eps;
         newP[i].sigma = p.adapICC.sigma;
@@ -54,7 +55,4 @@ void iccWall::splitExt(const Particle & p, std::queue<std::vector<NewParticle>> 
     newParticleData.push(newP);
 }
 
-iccWall::iccWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) : iccShape(cutoff, useTrans, transMatrix, invMatrix) {
-    this->normal = normal;
-    this->dist = dist;
-}
+iccWall::iccWall(Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) : iccShape(cutoff, useTrans, transMatrix, invMatrix) {}

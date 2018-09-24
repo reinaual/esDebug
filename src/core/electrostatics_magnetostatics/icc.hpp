@@ -132,9 +132,7 @@ void c_getCharges(PartCfg & partCfg);
 void c_rebuildData(PartCfg & partCfg);
 void c_checkSet(int ID);
 
-int c_addTypeWall(Vector3d normal,
-                  double dist,
-                  Vector3d cutoff,
+int c_addTypeWall(Vector3d cutoff,
                   bool useTrans,
                   double transMatrix[9],
                   double invMatrix[9]);
@@ -150,7 +148,7 @@ int c_addTypeCylinder(Vector3d center,
                       double * invMatrix);
 
 int c_addTypeTorus(Vector3d center, Vector3d axis, double length, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix);
-int c_addTypeInterface(Vector3d center, Vector3d axis, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix);
+int c_addTypeInterface(Vector3d center, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix);
 
 int c_outputVTK(char * filename, PartCfg & partCfg);
 

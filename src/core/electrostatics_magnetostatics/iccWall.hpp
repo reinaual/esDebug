@@ -7,11 +7,9 @@
 
 class iccWall : public iccShape {
     public:
-        iccWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix);
+        iccWall(Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix);
         void splitExt(const Particle & p, std::queue<std::vector<NewParticle>> &newParticleData);
         void reduceExt(NewParticle & reducedPart);
-        Vector3d normal;
-        double dist;
     private:
         int newParticles = 3;
 };

@@ -8,12 +8,11 @@
 
 class iccInterface : public iccShape {
 public:
-        iccInterface(Vector3d center, Vector3d axis, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix);
+        iccInterface(Vector3d center, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix);
         void splitExt(const Particle & p, std::queue<std::vector<NewParticle>> &newParticleData);
         void reduceExt(NewParticle & reducedPart);
         double calcArea(double x0, double x1);
         Vector3d center;
-        Vector3d axis;
         double radius;
         double radiusOuter;
         double radiusOuter2;

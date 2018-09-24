@@ -318,6 +318,7 @@ void c_splitParticles(PartCfg &partCfg, bool force) {
         id >= 0) {
           // check if particle is splittable
           iccShape * shapePointer = iccp3m_data.iccTypes[p.adapICC.iccTypeID];
+          fprintf(stderr, "%d\n", p.adapICC.iccTypeID);
           if (shapePointer->cutoff[0] <= p.adapICC.displace[0] &&
               shapePointer->cutoff[1] <= p.adapICC.displace[1] &&
               shapePointer->cutoff[2] <= p.adapICC.displace[2]) {
@@ -377,8 +378,8 @@ void c_checkSet(int ID) {
   }
 }
 
-int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9]) {
-  iccWall * wall = new iccWall(normal, dist, cutoff, useTrans, &transMatrix[0], &invMatrix[0]);
+int c_addTypeWall(Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9]) {
+  iccWall * wall = new iccWall(cutoff, useTrans, &transMatrix[0], &invMatrix[0]);
   iccp3m_data.iccTypes.push_back(wall);
   return iccp3m_data.iccTypes.size();
 }
@@ -395,8 +396,8 @@ int c_addTypeTorus(Vector3d center, Vector3d axis, double length, double radius,
   return iccp3m_data.iccTypes.size();
 }
 
-int c_addTypeInterface(Vector3d center, Vector3d axis, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {
-  iccInterface * interface = new iccInterface(center, axis, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix);
+int c_addTypeInterface(Vector3d center, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {
+  iccInterface * interface = new iccInterface(center, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix);
   iccp3m_data.iccTypes.push_back(interface);
   return iccp3m_data.iccTypes.size();
 }
@@ -432,7 +433,7 @@ LOOKUP_TABLE default\n", iccp3m_cfg.n_ic);
     auto const id = p.p.identity - iccp3m_cfg.first_id;
     if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
         id >= 0) {
-          fprintf(fp, "%f ", p.p.q);
+          fprintf(fp, "%f ", p.adapICC.area); // p.p.q
     }
   }
 
@@ -443,7 +444,7 @@ VECTORS field double\n");
     auto const id = p.p.identity - iccp3m_cfg.first_id;
     if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
         id >= 0) {
-          auto const E = p.f.f / p.p.q;
+          auto const E = p.adapICC.normal; //p.f.f / p.p.q;
           fprintf(fp, "%f %f %f ", E[0], E[1], E[2]);
     }
   }
