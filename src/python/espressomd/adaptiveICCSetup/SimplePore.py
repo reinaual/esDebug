@@ -213,7 +213,7 @@ class SetupSimplePore(object):
                                 iccTypeID=2)
 
                 pos[0][2] = pos[0][2] - self.lengthInner - 2 * (IZ + 0.5) * DeltaZ
-                pos[1][2] =  -pos[1][2]
+                pos[1][2] = -pos[1][2]
 
                 system.part.add(pos=np.dot(self.transMatrix, pos[0]),
                                 q=initCharge,

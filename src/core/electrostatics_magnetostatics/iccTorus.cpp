@@ -15,10 +15,10 @@ void iccTorus::reduceExt(NewParticle & reducedPart) {
     // position is in cylindrical coordinates
     Vector3d pos = useTrans ? matrixMul(reducedPart.pos - center, invMatrix) : reducedPart.pos - center;
 
-    double temp1 = smoothingRadius * smoothingRadius - pow((std::abs(pos[2]) - innerLengthHalf), 2.);
+    double temp = smoothingRadius * smoothingRadius - pow((std::abs(pos[2]) - innerLengthHalf), 2.);
     double radius;
-    if (temp1 > 0.) {
-        radius = radiusOuter - sqrt(temp1);
+    if (temp > 0.) {
+        radius = radiusOuter - sqrt(temp);
     } else {
         radius = radiusOuter;
     }
@@ -26,7 +26,7 @@ void iccTorus::reduceExt(NewParticle & reducedPart) {
     double phi = atan2(pos[1] / radius, pos[0] / radius);
 
     std::tuple<Vector3d, Vector3d, double> result;
-    result = calcTorusPart(phi - reducedPart.displace[1], pos[2] - reducedPart.displace[2], 2. * reducedPart.displace, temp1);
+    result = calcTorusPart(phi - reducedPart.displace[1], pos[2] - reducedPart.displace[2], 2. * reducedPart.displace);
     reducedPart.pos = (useTrans ? matrixMul(std::get<0>(result), transMatrix) : std::get<0>(result)) + center;
     reducedPart.normal = (useTrans ? matrixMul(std::get<1>(result), transMatrix) : std::get<1>(result));
     reducedPart.displace = reducedPart.displace * 2.;
@@ -34,7 +34,7 @@ void iccTorus::reduceExt(NewParticle & reducedPart) {
 
 void iccTorus::splitExt(const Particle & p, std::queue<std::vector<NewParticle>> &newParticleData) {
     // to cylindrical coordinates with ez as axis
-    Vector3d pos = useTrans ? matrixMul(p.r.p - center, invMatrix) : p.r.p - center;
+    const Vector3d pos = useTrans ? matrixMul(p.r.p - center, invMatrix) : p.r.p - center;
     const double chargedensity = p.p.q / p.adapICC.area;
     const Vector3d newdisplace = p.adapICC.displace / 2.0;
 
@@ -69,25 +69,25 @@ void iccTorus::splitExt(const Particle & p, std::queue<std::vector<NewParticle>>
 
     std::tuple<Vector3d, Vector3d, double> result;
 
-    result = calcTorusPart(phi + newdisplace[1], pos[2] + newdisplace[2], newdisplace, temp1);
+    result = calcTorusPart(phi + newdisplace[1], pos[2] + newdisplace[2], newdisplace);
     newP[0].pos = (useTrans ? matrixMul(std::get<0>(result), transMatrix) : std::get<0>(result)) + center;
     newP[0].normal = (useTrans ? matrixMul(std::get<1>(result), transMatrix) : std::get<1>(result));
     newP[0].area = std::get<2>(result);
     newP[0].charge = newP[0].area * chargedensity;
 
-    result = calcTorusPart(phi + newdisplace[1], pos[2] - newdisplace[2], newdisplace, temp1);
+    result = calcTorusPart(phi + newdisplace[1], pos[2] - newdisplace[2], newdisplace);
     newP[1].pos = (useTrans ? matrixMul(std::get<0>(result), transMatrix) : std::get<0>(result)) + center;
     newP[1].normal = (useTrans ? matrixMul(std::get<1>(result), transMatrix) : std::get<1>(result));
     newP[1].area = std::get<2>(result);
     newP[1].charge = newP[1].area * chargedensity;
 
-    result = calcTorusPart(phi - newdisplace[1], pos[2] + newdisplace[2], newdisplace, temp1);
+    result = calcTorusPart(phi - newdisplace[1], pos[2] + newdisplace[2], newdisplace);
     newP[2].pos = (useTrans ? matrixMul(std::get<0>(result), transMatrix) : std::get<0>(result)) + center;
     newP[2].normal = (useTrans ? matrixMul(std::get<1>(result), transMatrix) : std::get<1>(result));
     newP[2].area = std::get<2>(result);
     newP[2].charge = newP[2].area * chargedensity;
 
-    result = calcTorusPart(phi - newdisplace[1], pos[2] - newdisplace[2], newdisplace, temp1);
+    result = calcTorusPart(phi - newdisplace[1], pos[2] - newdisplace[2], newdisplace);
     newP[3].pos = (useTrans ? matrixMul(std::get<0>(result), transMatrix) : std::get<0>(result)) + center;
     newP[3].normal = (useTrans ? matrixMul(std::get<1>(result), transMatrix) : std::get<1>(result));
     newP[3].area = std::get<2>(result);
@@ -96,8 +96,9 @@ void iccTorus::splitExt(const Particle & p, std::queue<std::vector<NewParticle>>
     newParticleData.push(newP);
 }
 
-std::tuple<Vector3d, Vector3d, double> iccTorus::calcTorusPart(double phi, double z, Vector3d displace, double temp1) {
-    double temp = temp1 > 0. ? sqrt(temp1) : 0.;
+std::tuple<Vector3d, Vector3d, double> iccTorus::calcTorusPart(double phi, double z, Vector3d displace) {
+    double temp = smoothingRadius * smoothingRadius - pow(std::abs(z) - innerLengthHalf, 2);
+    temp = temp > 0. ? sqrt(temp) : 0.;
     double radiusTorus = radiusOuter - temp;
     Vector3d newPos = {radiusTorus * cos(phi), radiusTorus * sin(phi), z};
     Vector3d normal;
@@ -115,15 +116,16 @@ std::tuple<Vector3d, Vector3d, double> iccTorus::calcTorusPart(double phi, doubl
             normal[i] = t * axis[i];
         }
     }
-    return std::make_tuple(newPos, normal, 2. * (calcArea(std::abs(z) + displace[2], temp1) - calcArea(std::abs(z) - displace[2], temp1)) * displace[1]);
+    return std::make_tuple(newPos, normal, 2. * (calcArea(std::abs(z) + displace[2]) - calcArea(std::abs(z) - displace[2])) * displace[1]);
 }
 
-double iccTorus::calcArea(double z, double temp1) {
+double iccTorus::calcArea(double z) {
 
+    double temp = smoothingRadius * smoothingRadius - pow(std::abs(z) - innerLengthHalf, 2);
     double zprime = std::abs(z) - innerLengthHalf;
 
-    if (temp1 > 0.) {
-        double temp = sqrt(temp1);
+    if (temp > 0.) {
+        temp = sqrt(temp);
         return 2. * radius * std::abs(z) - 0.5 * (zprime * temp + smoothingRadius * smoothingRadius * atan(zprime / temp));
     } else {
         return 2. * radius * std::abs(z) - 0.25 * smoothingRadius * smoothingRadius * PI;
