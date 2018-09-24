@@ -1,10 +1,12 @@
 
-#include "math.h"
+#include <cmath>
+
 #include "Vector.hpp"
 #include "iccShape.hpp"
 #include "iccTorus.hpp"
 #include <boost/algorithm/clamp.hpp>
 #include "utils/constants.hpp"
+#include "utils.hpp"
 
 #include <queue>
 #include <tuple>
@@ -102,13 +104,18 @@ std::tuple<Vector3d, Vector3d, double> iccTorus::calcTorusPart(double phi, doubl
 
     if (temp > 0.) {
         // particle on torus with finite partial derivative
-        normal = - newPos;
-        normal[2] = copysign((std::abs(z) - innerLengthHalf) * radiusTorus / temp, z);
+        for (int i = 0; i < 3; i++) {
+            normal[i] = - newPos[i];
+        }
+        normal[2] = Utils::sgn(z) * (std::abs(z) - innerLengthHalf) * radiusTorus / temp;
     } else {
         // infinite partial derivative
-        normal = copysign(1., z) * axis;
+        int t = Utils::sgn(z);
+        for (int i = 0; i < 3; i++) {
+            normal[i] = t * axis[i];
+        }
     }
-    return std::make_tuple(newPos, normal, 2. * (calcArea(std::abs(z) + displace[2], temp1) - calcArea(std::abs(z) - displace[2], temp1) * displace[1]));
+    return std::make_tuple(newPos, normal, 2. * (calcArea(std::abs(z) + displace[2], temp1) - calcArea(std::abs(z) - displace[2], temp1)) * displace[1]);
 }
 
 double iccTorus::calcArea(double z, double temp1) {
