@@ -1,5 +1,5 @@
-#ifndef CORE_ICCSHAPE_TORUS_HPP
-#define CORE_ICCSHAPE_TORUS_HPP
+#ifndef CORE_ICCSHAPE_INTERFACE_HPP
+#define CORE_ICCSHAPE_INTERFACE_HPP
 
 #include "Vector.hpp"
 #include "iccShape.hpp"

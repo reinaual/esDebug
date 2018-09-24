@@ -537,3 +537,75 @@ IF ELECTROSTATICS and P3M:
             useTrans = _useTrans
 
             return c_addTypeCylinder(center, axis, length, radius, direction, cutoff, useTrans, transMatrix, invMatrix)
+        def addTypeTorus(self, _center, _axis, _length, _radius, _smoothingRadius, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
+            cdef Vector3d center
+            cdef Vector3d axis
+            cdef Vector3d cutoff
+            cdef double length
+            cdef double radius
+            cdef double smoothingRadius
+            cdef bool useTrans
+            cdef double transMatrix[9]
+            cdef double invMatrix[9]
+
+            check_type_or_throw_except(_center, 3, float, "center has to be floats")
+            check_type_or_throw_except(_axis, 3, float, "axis has to be floats")
+            check_type_or_throw_except(_length, 1, float, "length has to be float")
+            check_type_or_throw_except(_radius, 1, float, "radius has to be float")
+            check_type_or_throw_except(_smoothingRadius, 1, float, "smoothingRadius has to be float")
+            check_type_or_throw_except(_cutoff, 3, float, "cutoff has to be floats")
+            check_type_or_throw_except(_useTrans, 1, int, "useTrans has to be integer")
+
+            for i in range(3):
+              center[i] = _center[i]
+              axis[i] = _axis[i]
+              cutoff[i] = _cutoff[i]
+            length = _length
+            radius = _radius
+            smoothingRadius = _smoothingRadius
+
+            if _transMatrix is not None and _invMatrix is not None:
+              check_type_or_throw_except(_transMatrix, 9, float, "Matrix has to be 9 floats")
+              check_type_or_throw_except(_invMatrix, 9, float, "Matrix has to be 9 floats")
+              for i in range(9):
+                  transMatrix[i] = _transMatrix[i]
+                  invMatrix[i] = _invMatrix[i]
+
+            useTrans = _useTrans
+
+            return c_addTypeTorus(center, axis, length, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix)
+
+        def addTypeInterface(self, _center, _axis, _radius, _smoothingRadius, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
+            cdef Vector3d center
+            cdef Vector3d axis
+            cdef Vector3d cutoff
+            cdef double radius
+            cdef double smoothingRadius
+            cdef bool useTrans
+            cdef double transMatrix[9]
+            cdef double invMatrix[9]
+
+            check_type_or_throw_except(_center, 3, float, "center has to be floats")
+            check_type_or_throw_except(_axis, 3, float, "axis has to be floats")
+            check_type_or_throw_except(_radius, 1, float, "radius has to be float")
+            check_type_or_throw_except(_smoothingRadius, 1, float, "smoothingRadius has to be float")
+            check_type_or_throw_except(_cutoff, 3, float, "cutoff has to be floats")
+            check_type_or_throw_except(_useTrans, 1, int, "useTrans has to be integer")
+
+            for i in range(3):
+              center[i] = _center[i]
+              axis[i] = _axis[i]
+              cutoff[i] = _cutoff[i]
+            radius = _radius
+            smoothingRadius = _smoothingRadius
+
+            if _transMatrix is not None and _invMatrix is not None:
+              check_type_or_throw_except(_transMatrix, 9, float, "Matrix has to be 9 floats")
+              check_type_or_throw_except(_invMatrix, 9, float, "Matrix has to be 9 floats")
+              for i in range(9):
+                  transMatrix[i] = _transMatrix[i]
+                  invMatrix[i] = _invMatrix[i]
+
+            useTrans = _useTrans
+
+            return c_addTypeInterface(center, axis, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix)

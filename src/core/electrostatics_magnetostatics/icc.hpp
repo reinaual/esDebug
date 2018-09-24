@@ -149,6 +149,9 @@ int c_addTypeCylinder(Vector3d center,
                       double * transMatrix,
                       double * invMatrix);
 
+int c_addTypeTorus(Vector3d center, Vector3d axis, double length, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix);
+int c_addTypeInterface(Vector3d center, Vector3d axis, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix);
+
 int c_outputVTK(char * filename, PartCfg & partCfg);
 
 /** check sanity of parameters for use with ICCP3M

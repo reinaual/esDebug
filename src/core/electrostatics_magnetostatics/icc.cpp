@@ -57,6 +57,8 @@
 #include "iccShape.hpp"
 #include "iccWall.hpp"
 #include "iccCylinder.hpp"
+#include "iccTorus.hpp"
+#include "iccInterface.hpp"
 
 #ifdef ELECTROSTATICS
 
@@ -384,6 +386,18 @@ int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, 
 int c_addTypeCylinder(Vector3d center, Vector3d axis, double length, double radius, double direction, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {
   iccCylinder * cylinder = new iccCylinder(center, axis, length, radius, direction, cutoff, useTrans, transMatrix, invMatrix);
   iccp3m_data.iccTypes.push_back(cylinder);
+  return iccp3m_data.iccTypes.size();
+}
+
+int c_addTypeTorus(Vector3d center, Vector3d axis, double length, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {
+  iccTorus * torus = new iccTorus(center, axis, length, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix);
+  iccp3m_data.iccTypes.push_back(torus);
+  return iccp3m_data.iccTypes.size();
+}
+
+int c_addTypeInterface(Vector3d center, Vector3d axis, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {
+  iccInterface * interface = new iccInterface(center, axis, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix);
+  iccp3m_data.iccTypes.push_back(interface);
   return iccp3m_data.iccTypes.size();
 }
 
