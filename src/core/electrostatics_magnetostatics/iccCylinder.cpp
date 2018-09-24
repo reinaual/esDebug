@@ -27,7 +27,7 @@ void iccCylinder::splitExt(const Particle & p, std::queue<std::vector<NewParticl
     Vector3d pos = useTrans ? matrixMul(p.r.p - center, invMatrix) : p.r.p - center;
     const double chargedensity = p.p.q / p.adapICC.area;
     const Vector3d newdisplace = p.adapICC.displace / 2.0;
-    const double newArea = 4.0 * newdisplace[1] * newdisplace[2];
+    const double newArea = 4.0 * radius * newdisplace[1] * newdisplace[2];
 
     // in python clipping was necessary because of numerical errors
     double phi = atan2(boost::algorithm::clamp(pos[1] / radius, -1.0, 1.0), boost::algorithm::clamp(pos[0] / radius, -1.0, 1.0));
