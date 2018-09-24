@@ -1,8 +1,10 @@
 
-#include "math.h"
+#include <cmath>
+
 #include "Vector.hpp"
 #include "iccShape.hpp"
 #include "iccInterface.hpp"
+#include "utils.hpp"
 
 #include <queue>
 
@@ -16,24 +18,14 @@ void iccInterface::reduceExt(NewParticle & reducedPart) {
         double temp = radiusOuter2 - pos[0] * pos[0];
         temp = temp > 0. ? sqrt(temp) : 0.;
 
-        // sign
-        if (pos[1] > 0.) {
-            pos[1] = 0.5 * (radiusOuter + temp);
-        } else {
-            pos[1] = - 0.5 * (radiusOuter + temp);
-        }
+        pos[1] = Utils::sgn(pos[1]) * 0.5 * (radiusOuter + temp);
     } else {
         // vertical displacement
         pos[1] = pos[1] - reducedPart.displace[1];
         double temp = radiusOuter2 - pos[1] * pos[1];
         temp = temp > 0. ? sqrt(temp) : 0.;
 
-        // sign
-        if (pos[0] > 0.) {
-            pos[0] = 0.5 * (radiusOuter + temp);
-        } else {
-            pos[0] = - 0.5 * (radiusOuter + temp);
-        }
+        pos[0] = Utils::sgn(pos[0]) * 0.5 * (radiusOuter + temp);
     }
 
     reducedPart.pos = (useTrans ? matrixMul(pos, transMatrix) : pos) + center;
@@ -57,12 +49,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         double temp = radiusOuter2 - newP[0].pos[0] * newP[0].pos[0];
         temp = temp > 0. ? sqrt(temp) : 0.;
 
-        // sign
-        if (pos[1] >= 0.) {
-            newP[0].pos[1] = 0.5 * (radiusOuter + temp);
-        } else {
-            newP[0].pos[1] = - 0.5 * (radiusOuter + temp);
-        }
+        newP[0].pos[1] = Utils::sgn(pos[1]) * 0.5 * (radiusOuter + temp);
 
         newP[1].pos[0] = pos[0] - newdisplace[0];
         newP[1].pos[2] = pos[2];
@@ -70,11 +57,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         temp = radiusOuter2 - newP[1].pos[0] * newP[1].pos[0];
         temp = temp > 0. ? sqrt(temp) : 0.;
         // sign
-        if (pos[1] >= 0.) {
-            newP[1].pos[1] = 0.5 * (radiusOuter + temp);
-        } else {
-            newP[1].pos[1] = - 0.5 * (radiusOuter + temp);
-        }
+        newP[1].pos[1] = Utils::sgn(pos[1]) * 0.5 * (radiusOuter + temp);
 
         newP[0].area = calcArea(pos[0], pos[0] + p.adapICC.displace[0]);
         newP[1].area = calcArea(pos[0] - p.adapICC.displace[0], pos[0]);
@@ -86,12 +69,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         double temp = radiusOuter2 - newP[0].pos[1] * newP[0].pos[1];
         temp = temp > 0. ? sqrt(temp) : 0.;
 
-        // sign
-        if (pos[0] >= 0.) {
-            newP[0].pos[0] = 0.5 * (radiusOuter + temp);
-        } else {
-            newP[0].pos[0] = - 0.5 * (radiusOuter + temp);
-        }
+        newP[0].pos[0] = Utils::sgn(pos[0]) * 0.5 * (radiusOuter + temp);
 
         // second
         newP[1].pos[1] = pos[1] - newdisplace[1];
@@ -100,12 +78,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         temp = radiusOuter2 - newP[1].pos[1] * newP[1].pos[1];
         temp = temp > 0. ? sqrt(temp) : 0.;
 
-        // sign
-        if (pos[0] > 0.) {
-            newP[1].pos[0] = 0.5 * (radiusOuter + temp);
-        } else {
-            newP[1].pos[0] = - 0.5 * (radiusOuter + temp);
-        }
+        newP[1].pos[0] = Utils::sgn(pos[0]) * 0.5 * (radiusOuter + temp);
 
         newP[0].area = calcArea(pos[1], pos[1] + p.adapICC.displace[1]);
         newP[1].area = calcArea(pos[1] - p.adapICC.displace[1], pos[1]);
