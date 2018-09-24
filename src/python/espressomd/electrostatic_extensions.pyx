@@ -413,9 +413,6 @@ IF ELECTROSTATICS and P3M:
             summe = 0.;
 
             c_getCharges(partCfg())
-
-            iccp3m_data.iccCharges
-
             for vec in reversed(iccp3m_data.trackList):
                 skip = False
 
