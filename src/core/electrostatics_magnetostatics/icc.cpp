@@ -170,8 +170,8 @@ int iccp3m_iteration() {
           p.p.identity >= iccp3m_cfg.first_id) {
         auto const id = p.p.identity - iccp3m_cfg.first_id;
         /* the dielectric-related prefactor: */
-        auto const del_eps = (iccp3m_cfg.ein[id] - iccp3m_cfg.eout) /
-                             (iccp3m_cfg.ein[id] + iccp3m_cfg.eout);
+        auto const del_eps = (p.adapICC.eps - iccp3m_cfg.eout) /
+                             (p.adapICC.eps + iccp3m_cfg.eout);
         /* calculate the electric field at the certain position */
         auto const E = p.f.f / p.p.q + iccp3m_cfg.ext_field;
 
@@ -182,16 +182,16 @@ int iccp3m_iteration() {
         }
 
         /* recalculate the old charge density */
-        auto const hold = p.p.q / iccp3m_cfg.areas[id];
+        auto const hold = p.p.q / p.adapICC.area;
         /* determine if it is higher than the previously highest charge
          * density */
         hmax = std::max(hmax, std::abs(hold));
 
-        auto const f1 = del_eps * pref * (E * iccp3m_cfg.normals[id]);
-        auto const f2 = (not iccp3m_cfg.sigma.empty())
+        auto const f1 = del_eps * pref * (E * p.adapICC.normal);
+        auto const f2 = (p.adapICC.sigma > 0.)
                             ? (2 * iccp3m_cfg.eout) /
-                                  (iccp3m_cfg.eout + iccp3m_cfg.ein[id]) *
-                                  (iccp3m_cfg.sigma[id])
+                                  (iccp3m_cfg.eout + p.adapICC.eps) *
+                                  (p.adapICC.sigma)
                             : 0.;
         /* relative variation: never use an estimator which can be negative
          * here */
@@ -204,7 +204,7 @@ int iccp3m_iteration() {
 
         diff = std::max(diff, relative_difference);
 
-        p.p.q = hnew * iccp3m_cfg.areas[id];
+        p.p.q = hnew * p.adapICC.area;
 
         /* check if the charge now is more than 1e6, to determine if ICC still
          * leads to reasonable results */

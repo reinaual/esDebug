@@ -252,7 +252,6 @@ IF ELECTROSTATICS and P3M:
                     "minCharge": 0.}
 
         def _get_params_from_es_core(self):
-            print(iccp3m_cfg.n_ic)
             params = {}
             params["n_icc"] = iccp3m_cfg.n_ic
 
@@ -287,7 +286,6 @@ IF ELECTROSTATICS and P3M:
             return params
 
         def _set_params_in_es_core(self):
-            print(self._params["first_id"])
             # First set number of icc particles
             iccp3m_cfg.n_ic = self._params["n_icc"]
             iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size();
@@ -325,7 +323,6 @@ IF ELECTROSTATICS and P3M:
             cdef vector[int] currID
             # loop over all particles to split
             counter = 0
-            print(iccp3m_cfg.n_ic)
             while (iccp3m_data.newParticleData.size() != 0):
                 counter += 1
                 rerun = True
@@ -371,7 +368,6 @@ IF ELECTROSTATICS and P3M:
                 # remove vector from list
                 iccp3m_data.newParticleData.pop()
                 iccp3m_data.trackList.push_back(currID)
-                print(iccp3m_cfg.n_ic)
             return rerun
 
 
@@ -395,8 +391,7 @@ IF ELECTROSTATICS and P3M:
             mpi_iccp3m_init()
 
         def splitParticles(self, _system, _rerun=True, _force=False):
-            print('Splitting! {}'.format(_force))
-            print('nPart {}'.format(iccp3m_cfg.n_ic))
+            print('Splitting! {}'.format(iccp3m_cfg.n_ic))
             c_splitParticles(partCfg(), _force)
 
             if self._addNewParticlesToSystem(_system):
@@ -425,11 +420,11 @@ IF ELECTROSTATICS and P3M:
                 skip = False
 
                 # check if any particle is unreducable
-                if _force or not any(noReduce.count(vec[i]) for i in range(len(vec))):
+                if not any(noReduce.count(vec[i]) for i in range(len(vec))):
                     # calculate charge sum
                     for i in range(len(vec)):
                         summe += iccp3m_data.iccCharges[i]
-                    if abs(summe) < iccp3m_data.minCharge:
+                    if _force or abs(summe) < iccp3m_data.minCharge:
 
                         iccp3m_data.reducedPart.iccTypeID = _system.part[vec[0]].iccTypeID
                         for i in range(3):
@@ -448,27 +443,29 @@ IF ELECTROSTATICS and P3M:
                         part.normal = [iccp3m_data.reducedPart.normal[0],
                                        iccp3m_data.reducedPart.normal[1],
                                        iccp3m_data.reducedPart.normal[2]]
-                        summe = 0
                         part.area = sum(_system.part[vec].area)
                         part.q = sum(_system.part[vec].q)
                         part.displace = [iccp3m_data.reducedPart.displace[0],
                                          iccp3m_data.reducedPart.displace[1],
                                          iccp3m_data.reducedPart.displace[2]]
 
-                        if vec[-1] == (iccp3m_cfg.largestID):
-                            iccp3m_cfg.n_ic -= len(vec) - 1
+                        iccp3m_cfg.n_ic -= len(vec) - 1
+                        if vec[-1] == (iccp3m_cfg.largestID - 1):
                             iccp3m_cfg.largestID -= len(vec) - 1
                             c_checkSet(vec[1] - 1)
                         else:
                             for i in range(1, len(vec)):
                                 iccp3m_data.missingIDs.insert(vec[i])
 
-                        _system.part[vec[1] + iccp3m_cfg.first_id:vec[-1] + iccp3m_cfg.first_id].remove()
+                        print('{} - {}'.format(vec, len(_system.part)))
+                        _system.part[vec[1]:vec[-1]+1].remove()
+                        iccp3m_data.trackList.remove(vec)
                 else:
+                    print('actually got to else!')
                     noReduce.insert(vec)
-                    print(noReduce)
                     # exit early if all particles are unsplittable
                     if len(noReduce) >= iccp3m_cfg.n_ic:
+                        print('early breakout!')
                         break
             iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size()
             c_rebuildData(partCfg())

@@ -134,7 +134,7 @@ class SetupCylinder(object):
             # cylinder particles
             for Iphi in range(self.nCylinderPhi):
                 phi = (Iphi + 0.5) * DeltaPhi
-                for IZ in range(-int(self.nCylinderZ / 2), int(self.nCylinderZ / 2) + 1):
+                for IZ in range(-int(self.nCylinderZ / 2), int(self.nCylinderZ / 2) + self.nCylinderZ % 2):
                     z = IZ * DeltaZ
 
                     pos = self.calcCylPart(phi, z, np.array([0., DeltaPhi / 2., DeltaZ / 2.]))
