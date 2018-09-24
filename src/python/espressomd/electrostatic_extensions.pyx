@@ -24,6 +24,7 @@ from espressomd cimport actors
 from . import actors
 import numpy as np
 from espressomd.utils cimport handle_errors
+from . import utils
 from .system import System
 
 IF ELECTROSTATICS and P3M:
@@ -251,6 +252,7 @@ IF ELECTROSTATICS and P3M:
                     "minCharge": 0.}
 
         def _get_params_from_es_core(self):
+            print(iccp3m_cfg.n_ic)
             params = {}
             params["n_icc"] = iccp3m_cfg.n_ic
 
@@ -285,6 +287,7 @@ IF ELECTROSTATICS and P3M:
             return params
 
         def _set_params_in_es_core(self):
+            print(self._params["first_id"])
             # First set number of icc particles
             iccp3m_cfg.n_ic = self._params["n_icc"]
             iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size();
@@ -321,7 +324,10 @@ IF ELECTROSTATICS and P3M:
             rerun = False
             cdef vector[int] currID
             # loop over all particles to split
+            counter = 0
+            print(iccp3m_cfg.n_ic)
             while (iccp3m_data.newParticleData.size() != 0):
+                counter += 1
                 rerun = True
                 currID.clear()
                 # first particle is only modified
@@ -365,6 +371,7 @@ IF ELECTROSTATICS and P3M:
                 # remove vector from list
                 iccp3m_data.newParticleData.pop()
                 iccp3m_data.trackList.push_back(currID)
+                print(iccp3m_cfg.n_ic)
             return rerun
 
 
@@ -381,15 +388,21 @@ IF ELECTROSTATICS and P3M:
             mpi_iccp3m_init()
 
         def rebuildData(self):
+            iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size()
+            iccp3m_alloc_lists()
             c_rebuildData(partCfg())
 
-        def splitParticles(self, _system, rerun=True):
-            c_splitParticles(partCfg())
+            mpi_iccp3m_init()
+
+        def splitParticles(self, _system, _rerun=True, _force=False):
+            print('Splitting! {}'.format(_force))
+            print('nPart {}'.format(iccp3m_cfg.n_ic))
+            c_splitParticles(partCfg(), _force)
 
             if self._addNewParticlesToSystem(_system):
-                c_rebuildData(partCfg())
-                if rerun:
-                    self.splitParticles(_system, rerun=True)
+                self.rebuildData()
+                if _rerun:
+                    self.splitParticles(_system, _rerun=True, _force=_force)
 
         def outputCharges(self):
             c_getCharges(partCfg())
@@ -428,25 +441,27 @@ IF ELECTROSTATICS and P3M:
                         # delete other particles
                         # update numMissingIDs if not the last ones <- problem here!
 
-                        part = _system.part[vec[0] + iccp3m_cfg.first_id]
+                        part = _system.part[vec[0]]
                         part.pos = [iccp3m_data.reducedPart.pos[0],
                                     iccp3m_data.reducedPart.pos[1],
                                     iccp3m_data.reducedPart.pos[2]]
                         part.normal = [iccp3m_data.reducedPart.normal[0],
                                        iccp3m_data.reducedPart.normal[1],
                                        iccp3m_data.reducedPart.normal[2]]
-                        part.area = sum(_system.part[vec + iccp3m_cfg.first_id].area)
-                        part.q = sum(_system.part[vec + iccp3m_cfg.first_id].q)
+                        summe = 0
+                        part.area = sum(_system.part[vec].area)
+                        part.q = sum(_system.part[vec].q)
                         part.displace = [iccp3m_data.reducedPart.displace[0],
                                          iccp3m_data.reducedPart.displace[1],
                                          iccp3m_data.reducedPart.displace[2]]
 
-                        if vec[1] + iccp3m_cfg.first_id < (len(_system.part) - len(vec) + 1):
-                            iccp3m_data.missingIDs.insert(vec[1:])
-                        else:
+                        if vec[-1] == (iccp3m_cfg.largestID):
                             iccp3m_cfg.n_ic -= len(vec) - 1
                             iccp3m_cfg.largestID -= len(vec) - 1
                             c_checkSet(vec[1] - 1)
+                        else:
+                            for i in range(1, len(vec)):
+                                iccp3m_data.missingIDs.insert(vec[i])
 
                         _system.part[vec[1] + iccp3m_cfg.first_id:vec[-1] + iccp3m_cfg.first_id].remove()
                 else:
@@ -457,6 +472,10 @@ IF ELECTROSTATICS and P3M:
                         break
             iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size()
             c_rebuildData(partCfg())
+
+        def outputICCData(self, _filename):
+            if (c_outputVTK(utils.to_char_pointer(_filename), partCfg())):
+                print('Something seemed to went wrong!')
 
         def addTypeWall(self, _normal, _dist, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
             cdef Vector3d normal

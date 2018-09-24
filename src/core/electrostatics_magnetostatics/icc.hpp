@@ -125,7 +125,7 @@ int iccp3m_iteration();
  */
 void iccp3m_alloc_lists();
 
-void c_splitParticles(PartCfg &partCfg);
+void c_splitParticles(PartCfg &partCfg, bool force);
 void c_reduceParticle();
 
 void c_getCharges(PartCfg & partCfg);
@@ -148,6 +148,8 @@ int c_addTypeCylinder(Vector3d center,
                       bool useTrans,
                       double * transMatrix,
                       double * invMatrix);
+
+int c_outputVTK(char * filename, PartCfg & partCfg);
 
 /** check sanity of parameters for use with ICCP3M
  */

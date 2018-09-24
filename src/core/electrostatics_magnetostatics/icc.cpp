@@ -29,7 +29,9 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+
 #include <set>
+#include <fstream>
 
 #include "electrostatics_magnetostatics/elc.hpp"
 #include "electrostatics_magnetostatics/mmm1d.hpp"
@@ -307,18 +309,21 @@ void calc_long_range_forces_iccp3m() {
 #endif
 }
 
-void c_splitParticles(PartCfg &partCfg) {
+void c_splitParticles(PartCfg &partCfg, bool force) {
   for (auto &p : partCfg) {
-    if (p.p.identity < iccp3m_cfg.n_ic + iccp3m_cfg.first_id + iccp3m_cfg.numMissingIDs &&
-        p.p.identity >= iccp3m_cfg.first_id &&
-        std::abs(p.p.q) > iccp3m_data.maxCharge) {
+    auto const id = p.p.identity - iccp3m_cfg.first_id;
+    if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
+        id >= 0) {
           // check if particle is splittable
           iccShape * shapePointer = iccp3m_data.iccTypes[p.adapICC.iccTypeID];
           if (shapePointer->cutoff[0] <= p.adapICC.displace[0] &&
               shapePointer->cutoff[1] <= p.adapICC.displace[1] &&
               shapePointer->cutoff[2] <= p.adapICC.displace[2]) {
-                // split this particle
-                shapePointer->splitExt(p, iccp3m_data.newParticleData);
+
+                if (force || (std::abs(p.p.q) > iccp3m_data.maxCharge)) {
+                  // split this particle
+                  shapePointer->splitExt(p, iccp3m_data.newParticleData);
+                }
           }
     }
   }
@@ -342,9 +347,6 @@ void c_reduceParticle() {
 }
 
 void c_rebuildData(PartCfg & partCfg) {
-  iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size();
-  iccp3m_alloc_lists();
-
   for (auto &p : partCfg) {
     auto const id = p.p.identity - iccp3m_cfg.first_id;
     if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
@@ -357,8 +359,6 @@ void c_rebuildData(PartCfg & partCfg) {
           }
     }
   }
-
-  mpi_iccp3m_init();
 }
 
 void c_checkSet(int ID) {
@@ -386,6 +386,61 @@ int c_addTypeCylinder(Vector3d center, Vector3d axis, double length, double radi
   iccp3m_data.iccTypes.push_back(cylinder);
   return iccp3m_data.iccTypes.size();
 }
+
+int c_outputVTK(char * filename, PartCfg & partCfg) {
+  FILE *fp = fopen(filename, "w");
+
+  if (fp == nullptr) {
+    return 1;
+  }
+
+  fprintf(fp, "\
+# vtk DataFile Version 3.0\n\
+vtk output\n\
+ASCII\n\
+DATASET POLYDATA\n\
+POINTS %u double\n", iccp3m_cfg.n_ic);
+
+  for (auto &p : partCfg) {
+    auto const id = p.p.identity - iccp3m_cfg.first_id;
+    if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
+        id >= 0) {
+          fprintf(fp, "%f %f %f ", p.r.p[0], p.r.p[1], p.r.p[2]);
+    }
+  }
+
+  fprintf(fp, "\n\
+POINT_DATA %u\n\
+SCALARS charge double\n\
+LOOKUP_TABLE default\n", iccp3m_cfg.n_ic);
+
+  for (auto &p : partCfg) {
+    auto const id = p.p.identity - iccp3m_cfg.first_id;
+    if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
+        id >= 0) {
+          fprintf(fp, "%f ", p.p.q);
+    }
+  }
+
+  fprintf(fp, "\n\
+VECTORS field double\n");
+
+  for (auto &p : partCfg) {
+    auto const id = p.p.identity - iccp3m_cfg.first_id;
+    if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
+        id >= 0) {
+          auto const E = p.f.f / p.p.q;
+          fprintf(fp, "%f %f %f ", E[0], E[1], E[2]);
+    }
+  }
+  fclose(fp);
+
+  return 0;
+}
+
+
+
+
 
 /** \name Private Functions */
 /************************************************************/

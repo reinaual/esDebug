@@ -148,7 +148,8 @@ class SetupCylinder(object):
                                          displace=[0., DeltaPhi / 2., DeltaZ / 2.],
                                          iccTypeID=iccTypeID,
                                          type=particleTypeID,
-                                         fix=[1, 1, 1])
+                                         fix=[1, 1, 1],
+                                         f=[0, 0, 0])
 
 
     def calcCylPart(self, phi, z, dxdydz):

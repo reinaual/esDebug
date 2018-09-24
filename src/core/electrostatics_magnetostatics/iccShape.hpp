@@ -29,7 +29,9 @@ class iccShape {
     protected:
         iccShape(Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {
             this->useTrans = useTrans;
-            this->cutoff = cutoff;
+            for (int i = 0; i < 3; i++){
+              this->cutoff[i] = cutoff[i];
+            }
             for (int i = 0; i < 9; i++) {
                 this->transMatrix[i] = transMatrix[i];
                 this->invMatrix[i] = invMatrix[i];

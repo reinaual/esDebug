@@ -104,7 +104,7 @@ IF ELECTROSTATICS and P3M:
 
         void iccp3m_alloc_lists()
 
-        void c_splitParticles(PartCfg & partCfg)
+        void c_splitParticles(PartCfg & partCfg, bool force)
 
         void c_reduceParticle()
 
@@ -116,6 +116,8 @@ IF ELECTROSTATICS and P3M:
 
         int c_addTypeWall(Vector3d normal, double dist, Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9])
         int c_addTypeCylinder(Vector3d center, Vector3d axis, double length, double radius, double direction, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix)
+
+        int c_outputVTK(char * filename, PartCfg & partCfg)
 
     cdef extern from "communication.hpp":
         int mpi_iccp3m_init()

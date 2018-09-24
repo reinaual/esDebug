@@ -80,7 +80,7 @@ std::pair<Vector3d, Vector3d> iccCylinder::calcCylPart(double phi, double z) {
     return std::make_pair(pos, norm);
 }
 
-iccCylinder::iccCylinder(Vector3d center, Vector3d axis, double length, double radius, double direction, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) : iccShape(cutoff, useTrans, transMatrix, invMatrix) {
+iccCylinder::iccCylinder(Vector3d center, Vector3d axis, double length, double radius, double direction, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) : iccShape::iccShape(cutoff, useTrans, transMatrix, invMatrix) {
     this->center = center;
     this->axis = axis;
     this->length = length;
