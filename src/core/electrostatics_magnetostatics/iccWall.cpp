@@ -13,7 +13,6 @@ void iccWall::reduceExt(NewParticle & reducedPart) {
 }
 
 void iccWall::splitExt(const Particle & p, std::queue<std::vector<NewParticle>> &newParticleData) {
-    fprintf(stderr, "got to split");
     // split to 4 new particles
     const Vector3d temp = useTrans ? matrixMul(p.r.p, invMatrix) : p.r.p;
     const double chargedensity = p.p.q / p.adapICC.area;

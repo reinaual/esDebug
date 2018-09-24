@@ -318,7 +318,7 @@ void c_splitParticles(PartCfg &partCfg, bool force) {
         id >= 0) {
           // check if particle is splittable
           iccShape * shapePointer = iccp3m_data.iccTypes[p.adapICC.iccTypeID];
-          fprintf(stderr, "%d\n", p.adapICC.iccTypeID);
+          //fprintf(stderr, "%d\n", p.adapICC.iccTypeID);
           if (shapePointer->cutoff[0] <= p.adapICC.displace[0] &&
               shapePointer->cutoff[1] <= p.adapICC.displace[1] &&
               shapePointer->cutoff[2] <= p.adapICC.displace[2]) {

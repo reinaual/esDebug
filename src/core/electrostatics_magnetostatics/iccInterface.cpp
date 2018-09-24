@@ -8,11 +8,11 @@
 
 void iccInterface::reduceExt(NewParticle & reducedPart) {
     // position is in cylindrical coordinates
-    Vector3d pos = useTrans ? matrixMul(reducedPart.pos, invMatrix) : reducedPart.pos;
+    Vector3d pos = useTrans ? matrixMul(reducedPart.pos - center, invMatrix) : reducedPart.pos - center;
 
     if (reducedPart.displace[0] > 0.) {
         // horizontal displacement
-        pos[0] -= reducedPart.displace[0];
+        pos[0] = pos[0] - reducedPart.displace[0];
         double temp = radiusOuter2 - pos[0] * pos[0];
         temp = temp > 0. ? sqrt(temp) : 0.;
 
@@ -24,7 +24,7 @@ void iccInterface::reduceExt(NewParticle & reducedPart) {
         }
     } else {
         // vertical displacement
-        pos[1] -= reducedPart.displace[1];
+        pos[1] = pos[1] - reducedPart.displace[1];
         double temp = radiusOuter2 - pos[1] * pos[1];
         temp = temp > 0. ? sqrt(temp) : 0.;
 
@@ -36,14 +36,14 @@ void iccInterface::reduceExt(NewParticle & reducedPart) {
         }
     }
 
-    reducedPart.pos = (useTrans ? matrixMul(pos, transMatrix) : pos);
+    reducedPart.pos = (useTrans ? matrixMul(pos, transMatrix) : pos) + center;
     // normal stays the same
     reducedPart.displace = reducedPart.displace * 2.;
 }
 
 void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewParticle>> &newParticleData) {
     // to cylindrical coordinates with ez as axis
-    Vector3d pos = useTrans ? matrixMul(p.r.p - center, invMatrix) : p.r.p - center;
+    const Vector3d pos = useTrans ? matrixMul(p.r.p - center, invMatrix) : p.r.p - center;
     const double chargedensity = p.p.q / p.adapICC.area;
     const Vector3d newdisplace = p.adapICC.displace / 2.0;
 
@@ -58,7 +58,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         temp = temp > 0. ? sqrt(temp) : 0.;
 
         // sign
-        if (pos[1] > 0.) {
+        if (pos[1] >= 0.) {
             newP[0].pos[1] = 0.5 * (radiusOuter + temp);
         } else {
             newP[0].pos[1] = - 0.5 * (radiusOuter + temp);
@@ -70,7 +70,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         temp = radiusOuter2 - newP[1].pos[0] * newP[1].pos[0];
         temp = temp > 0. ? sqrt(temp) : 0.;
         // sign
-        if (pos[1] > 0.) {
+        if (pos[1] >= 0.) {
             newP[1].pos[1] = 0.5 * (radiusOuter + temp);
         } else {
             newP[1].pos[1] = - 0.5 * (radiusOuter + temp);
@@ -87,7 +87,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         temp = temp > 0. ? sqrt(temp) : 0.;
 
         // sign
-        if (pos[0] > 0.) {
+        if (pos[0] >= 0.) {
             newP[0].pos[0] = 0.5 * (radiusOuter + temp);
         } else {
             newP[0].pos[0] = - 0.5 * (radiusOuter + temp);
@@ -117,6 +117,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
     newP[0].displace = newdisplace;
     newP[0].eps = p.adapICC.eps;
     newP[0].sigma = p.adapICC.sigma;
+    newP[0].pos = (useTrans ? matrixMul(newP[0].pos, transMatrix) : newP[0].pos) + center;
 
     for (int i = 1; i < newParticles + 1; i++) {
         newP[i].parentID = 0;
@@ -125,7 +126,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         newP[i].displace = newdisplace;
         newP[i].eps = p.adapICC.eps;
         newP[i].sigma = p.adapICC.sigma;
-        newP[i].pos = newP[i].pos + center;
+        newP[i].pos = (useTrans ? matrixMul(newP[i].pos, transMatrix) : newP[i].pos) + center;
     }
 
     newP[0].normal = p.adapICC.normal;
