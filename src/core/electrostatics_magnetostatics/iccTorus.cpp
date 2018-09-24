@@ -16,14 +16,14 @@ void iccTorus::reduceExt(NewParticle & reducedPart) {
     Vector3d pos = useTrans ? matrixMul(reducedPart.pos - center, invMatrix) : reducedPart.pos - center;
 
     double temp = smoothingRadius * smoothingRadius - pow((std::abs(pos[2]) - innerLengthHalf), 2.);
-    double radius;
+    double rad;
     if (temp > 0.) {
-        radius = radiusOuter - sqrt(temp);
+        rad = radiusOuter - sqrt(temp);
     } else {
-        radius = radiusOuter;
+        rad = radiusOuter;
     }
 
-    double phi = atan2(pos[1] / radius, pos[0] / radius);
+    double phi = atan2(pos[1] / rad, pos[0] / rad);
 
     std::tuple<Vector3d, Vector3d, double> result;
     result = calcTorusPart(phi - reducedPart.displace[1], pos[2] - reducedPart.displace[2], 2. * reducedPart.displace);
@@ -40,14 +40,14 @@ void iccTorus::splitExt(const Particle & p, std::queue<std::vector<NewParticle>>
 
     double temp1 = smoothingRadius * smoothingRadius - pow((std::abs(pos[2]) - innerLengthHalf), 2.);
 
-    double radius;
+    double rad;
     if (temp1 > 0.) {
-        radius = radiusOuter - sqrt(temp1);
+        rad = radiusOuter - sqrt(temp1);
     } else {
-        radius = radiusOuter;
+        rad = radiusOuter;
     }
 
-    double phi = atan2(pos[1] / radius, pos[0] / radius);
+    double phi = atan2(pos[1] / rad, pos[0] / rad);
 
     std::vector<NewParticle> newP(newParticles + 1);
 
@@ -121,8 +121,8 @@ std::tuple<Vector3d, Vector3d, double> iccTorus::calcTorusPart(double phi, doubl
 
 double iccTorus::calcArea(double z) {
 
-    double temp = smoothingRadius * smoothingRadius - pow(std::abs(z) - innerLengthHalf, 2);
     double zprime = std::abs(z) - innerLengthHalf;
+    double temp = smoothingRadius * smoothingRadius - zprime * zprime;
 
     if (temp > 0.) {
         temp = sqrt(temp);
@@ -138,6 +138,6 @@ iccTorus::iccTorus(Vector3d center, Vector3d axis, double length, double radius,
     this->length = length;
     this->radius = radius;
     this->smoothingRadius = smoothingRadius;
-    this->innerLengthHalf = (length - smoothingRadius) / 2.l;
+    this->innerLengthHalf = length / 2. - smoothingRadius;
     this->radiusOuter = radius + smoothingRadius;
 }
