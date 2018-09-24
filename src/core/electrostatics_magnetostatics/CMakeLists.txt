@@ -17,6 +17,7 @@ add_library(electrostatics_magnetostatics_core SHARED
     iccWall.cpp
     iccCylinder.cpp
     iccTorus.cpp
+    iccInterface.cpp
 )
 
 if(CUDA)
