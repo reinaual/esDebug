@@ -18,7 +18,7 @@ void iccCylinder::reduceExt(NewParticle & reducedPart) {
     std::pair<Vector3d, Vector3d> result;
     result = calcCylPart(phi - reducedPart.displace[1], pos[2] - reducedPart.displace[2]);
     reducedPart.pos = (useTrans ? matrixMul(result.first, transMatrix) : result.first) + center;
-    reducedPart.normal = (useTrans ? matrixMul(result.second, transMatrix) : result.second) + center;
+    reducedPart.normal = (useTrans ? matrixMul(result.second, transMatrix) : result.second);
     reducedPart.displace = reducedPart.displace * 2.;
 }
 
@@ -74,9 +74,10 @@ void iccCylinder::splitExt(const Particle & p, std::queue<std::vector<NewParticl
 }
 
 std::pair<Vector3d, Vector3d> iccCylinder::calcCylPart(double phi, double z) {
-    Vector3d pos = {radius * cos(phi), radius * sin(phi), z};
+    Vector3d pos({radius * cos(phi), radius * sin(phi), z});
     Vector3d norm = direction * pos;
     norm[2] = 0.0;
+    norm.normalize();
     return std::make_pair(pos, norm);
 }
 

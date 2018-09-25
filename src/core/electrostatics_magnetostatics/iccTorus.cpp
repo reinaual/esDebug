@@ -100,7 +100,7 @@ std::tuple<Vector3d, Vector3d, double> iccTorus::calcTorusPart(double phi, doubl
     double temp = smoothingRadius * smoothingRadius - pow(std::abs(z) - innerLengthHalf, 2);
     temp = temp > 0. ? sqrt(temp) : 0.;
     double radiusTorus = radiusOuter - temp;
-    Vector3d newPos = {radiusTorus * cos(phi), radiusTorus * sin(phi), z};
+    Vector3d newPos({radiusTorus * cos(phi), radiusTorus * sin(phi), z});
     Vector3d normal;
 
     if (temp > 0.) {
@@ -116,6 +116,7 @@ std::tuple<Vector3d, Vector3d, double> iccTorus::calcTorusPart(double phi, doubl
             normal[i] = t * axis[i];
         }
     }
+    normal.normalize();
     return std::make_tuple(newPos, normal, 2. * (calcArea(std::abs(z) + displace[2]) - calcArea(std::abs(z) - displace[2])) * displace[1]);
 }
 
