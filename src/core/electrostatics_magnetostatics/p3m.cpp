@@ -667,7 +667,7 @@ void p3m_do_assign_charge(double q, Vector3d &real_pos, int cp_cnt) {
     }
   } else {
     for (int i0 = 0; i0 < cao; i0++) {
-      auto const tmp0 = p3m.int_caf[i0][arg[0]];
+      auto const tmp0 = p3m.int_caf[i0][arg[0]];                                  /////////////////////////////////////////
       for (int i1 = 0; i1 < cao; i1++) {
         auto const tmp1 = tmp0 * p3m.int_caf[i1][arg[1]];
         for (int i2 = 0; i2 < cao; i2++) {
