@@ -230,6 +230,8 @@ int iccp3m_iteration() {
 
     MPI_Allreduce(&diff, &globalmax, 1, MPI_DOUBLE, MPI_MAX, comm_cart);
 
+    // std::cerr << "iccIter: " << j << " - " << diff << '\n';
+
     if (globalmax < iccp3m_cfg.convergence)
       break;
     if (diff > 1e89) {
@@ -412,6 +414,7 @@ int c_outputVTK(char * filename, PartCfg & partCfg) {
 
   std::vector<Vector3d> forces;
   forces.reserve(iccp3m_cfg.n_ic);
+
   std::vector<double> charges;
   charges.reserve(iccp3m_cfg.n_ic);
 
@@ -427,7 +430,7 @@ POINTS %u double\n", iccp3m_cfg.n_ic);
     if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
         id >= 0) {
           fprintf(fp, "%f %f %f ", p.r.p[0], p.r.p[1], p.r.p[2]);
-          forces.push_back(p.f.f); // f.f
+          forces.push_back(p.f.f / p.p.q);
           charges.push_back(p.p.q);
     }
   }
