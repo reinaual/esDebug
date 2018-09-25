@@ -324,44 +324,52 @@ IF ELECTROSTATICS and P3M:
             # loop over all particles to split
             counter = 0
             while (iccp3m_data.newParticleData.size() != 0):
+                frontData = iccp3m_data.newParticleData.front()
                 counter += 1
                 rerun = True
                 currID.clear()
                 # first particle is only modified
-                currID.push_back(iccp3m_data.newParticleData.front()[0].parentID)
+                currID.push_back(frontData[0].parentID)
 
-                parentPart = _system.part[iccp3m_data.newParticleData.front()[0].parentID]
-                parentPart.pos = [iccp3m_data.newParticleData.front()[0].pos[0],
-                                  iccp3m_data.newParticleData.front()[0].pos[1],
-                                  iccp3m_data.newParticleData.front()[0].pos[2]]
-                parentPart.q = iccp3m_data.newParticleData.front()[0].charge
-                parentPart.displace = [iccp3m_data.newParticleData.front()[0].displace[0],
-                                       iccp3m_data.newParticleData.front()[0].displace[1],
-                                       iccp3m_data.newParticleData.front()[0].displace[2]]
-                parentPart.normal = [iccp3m_data.newParticleData.front()[0].normal[0],
-                                     iccp3m_data.newParticleData.front()[0].normal[1],
-                                     iccp3m_data.newParticleData.front()[0].normal[2]]
-                parentPart.area = iccp3m_data.newParticleData.front()[0].area
+                print(frontData[0].charge)
+                print(frontData[0].area)
+                print(frontData[0].normal[0], frontData[0].normal[1], frontData[0].normal[2])
+
+                parentPart = _system.part[frontData[0].parentID]
+                parentPart.pos = [frontData[0].pos[0],
+                                  frontData[0].pos[1],
+                                  frontData[0].pos[2]]
+                parentPart.q = frontData[0].charge
+                parentPart.displace = [frontData[0].displace[0],
+                                       frontData[0].displace[1],
+                                       frontData[0].displace[2]]
+                parentPart.normal = [frontData[0].normal[0],
+                                     frontData[0].normal[1],
+                                     frontData[0].normal[2]]
+                parentPart.area = frontData[0].area
 
                 # add leftover particles
-                for i in range(1, iccp3m_data.newParticleData.front().size()):
+                for i in range(1, frontData.size()):
+                    print(frontData[i].charge)
+                    print(frontData[i].area)
+                    print(frontData[i].normal[0], frontData[i].normal[1], frontData[i].normal[2])
                     currID.push_back(iccp3m_cfg.largestID)
                     _system.part.add(id=iccp3m_cfg.largestID,
-                                     pos=[iccp3m_data.newParticleData.front()[i].pos[0],
-                                          iccp3m_data.newParticleData.front()[i].pos[1],
-                                          iccp3m_data.newParticleData.front()[i].pos[2]],
-                                     q=iccp3m_data.newParticleData.front()[i].charge,
-                                     area=iccp3m_data.newParticleData.front()[i].area,
-                                     eps=iccp3m_data.newParticleData.front()[i].eps,
-                                     sigma=iccp3m_data.newParticleData.front()[i].sigma,
-                                     displace=[iccp3m_data.newParticleData.front()[i].displace[0],
-                                              iccp3m_data.newParticleData.front()[i].displace[1],
-                                              iccp3m_data.newParticleData.front()[i].displace[2]],
-                                     normal=[iccp3m_data.newParticleData.front()[i].normal[0],
-                                             iccp3m_data.newParticleData.front()[i].normal[1],
-                                             iccp3m_data.newParticleData.front()[i].normal[2]],
-                                     iccTypeID=iccp3m_data.newParticleData.front()[i].iccTypeID,
-                                     type=iccp3m_data.newParticleData.front()[i].typeID,
+                                     pos=[frontData[i].pos[0],
+                                          frontData[i].pos[1],
+                                          frontData[i].pos[2]],
+                                     q=frontData[i].charge,
+                                     area=frontData[i].area,
+                                     eps=frontData[i].eps,
+                                     sigma=frontData[i].sigma,
+                                     displace=[frontData[i].displace[0],
+                                              frontData[i].displace[1],
+                                              frontData[i].displace[2]],
+                                     normal=[frontData[i].normal[0],
+                                             frontData[i].normal[1],
+                                             frontData[i].normal[2]],
+                                     iccTypeID=frontData[i].iccTypeID,
+                                     type=frontData[i].typeID,
                                      fix=[1, 1, 1])
                     iccp3m_cfg.largestID += 1
                     iccp3m_cfg.n_ic += 1
