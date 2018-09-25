@@ -480,8 +480,7 @@ POINTS %u double\n", iccp3m_cfg.first_id);
 
   fprintf(fp, "\n\
 POINT_DATA %u\n\
-VECTORS field double\n\
-LOOKUP_TABLE default\n", iccp3m_cfg.first_id);
+VECTORS field double\n", iccp3m_cfg.first_id);
 
   for (auto & force : forces) {
     fprintf(fp, "%f %f %f ", force[0], force[1], force[2]);
