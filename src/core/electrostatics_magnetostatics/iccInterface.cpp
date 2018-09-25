@@ -133,7 +133,6 @@ double iccInterface::calcArea(double x0, double x1) {
     } else {
         out -= 0.25 * radiusOuter2 * PI;
     }
-    std::cerr << "got " << out << " as area!" << std::endl;
     return out;
 }
 
