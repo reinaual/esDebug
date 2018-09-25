@@ -1,5 +1,6 @@
 
 #include <cmath>
+#include <iostream>
 
 #include "Vector.hpp"
 #include "iccShape.hpp"
@@ -91,6 +92,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
     newP[0].eps = p.adapICC.eps;
     newP[0].sigma = p.adapICC.sigma;
     newP[0].pos = (useTrans ? matrixMul(newP[0].pos, transMatrix) : newP[0].pos) + center;
+    newP[0].charge = chargedensity * newP[0].area;
 
     for (int i = 1; i < newParticles + 1; i++) {
         newP[i].parentID = 0;
@@ -100,6 +102,7 @@ void iccInterface::splitExt(const Particle & p, std::queue<std::vector<NewPartic
         newP[i].eps = p.adapICC.eps;
         newP[i].sigma = p.adapICC.sigma;
         newP[i].pos = (useTrans ? matrixMul(newP[i].pos, transMatrix) : newP[i].pos) + center;
+        newP[i].charge = chargedensity * newP[i].area;
     }
 
     newP[0].normal = p.adapICC.normal;
@@ -130,6 +133,7 @@ double iccInterface::calcArea(double x0, double x1) {
     } else {
         out -= 0.25 * radiusOuter2 * PI;
     }
+    std::cerr << "got " << out << " as area!" << std::endl;
     return out;
 }
 
