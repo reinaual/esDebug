@@ -471,6 +471,10 @@ IF ELECTROSTATICS and P3M:
             if (c_outputVTK(utils.to_char_pointer(_filename), partCfg())):
                 print('Something seemed to went wrong!')
 
+        def outputParticleData(self, _filename):
+            if (c_outputParticle(utils.to_char_pointer(_filename), partCfg())):
+                print('Something seemed to went wrong!')
+
         def addTypeWall(self, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
             cdef Vector3d cutoff
             cdef bool useTrans

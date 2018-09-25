@@ -129,13 +129,14 @@ class SetupSimplePore(object):
                              _transMatrix=self.transMatrix.flatten(),
                              _invMatrix=self.invMatrix.flatten())
 
-        icc.addTypeInterface(_center=self.center,
+        a = icc.addTypeInterface(_center=self.center,
                              _radius=self.radius,
                              _smoothingRadius=self.smoothing_radius,
                              _cutoff=[0, self.splitCutoff[3][1], 0],
                              _useTrans=self.useTrans,
                              _transMatrix=self.transMatrix.flatten(),
                              _invMatrix=self.invMatrix.flatten())
+        print(a)
 
   def initParticles(self, system, TypeID, initCharge, sigma, epsilon, splitCutoff=0):
     '''

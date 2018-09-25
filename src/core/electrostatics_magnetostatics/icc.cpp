@@ -29,6 +29,7 @@
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
+#include <iostream>
 
 #include <set>
 #include <fstream>
@@ -318,7 +319,7 @@ void c_splitParticles(PartCfg &partCfg, bool force) {
         id >= 0) {
           // check if particle is splittable
           iccShape * shapePointer = iccp3m_data.iccTypes[p.adapICC.iccTypeID];
-          //fprintf(stderr, "%d\n", p.adapICC.iccTypeID);
+          // fprintf(stderr, "%d\n", p.adapICC.iccTypeID);
           if (shapePointer->cutoff[0] <= p.adapICC.displace[0] &&
               shapePointer->cutoff[1] <= p.adapICC.displace[1] &&
               shapePointer->cutoff[2] <= p.adapICC.displace[2]) {
@@ -409,6 +410,11 @@ int c_outputVTK(char * filename, PartCfg & partCfg) {
     return 1;
   }
 
+  std::vector<Vector3d> forces;
+  forces.reserve(iccp3m_cfg.n_ic);
+  std::vector<double> charges;
+  charges.reserve(iccp3m_cfg.n_ic);
+
   fprintf(fp, "\
 # vtk DataFile Version 3.0\n\
 vtk output\n\
@@ -421,6 +427,8 @@ POINTS %u double\n", iccp3m_cfg.n_ic);
     if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
         id >= 0) {
           fprintf(fp, "%f %f %f ", p.r.p[0], p.r.p[1], p.r.p[2]);
+          forces.push_back(p.f.f); // f.f
+          charges.push_back(p.p.q);
     }
   }
 
@@ -429,30 +437,59 @@ POINT_DATA %u\n\
 SCALARS charge double\n\
 LOOKUP_TABLE default\n", iccp3m_cfg.n_ic);
 
-  for (auto &p : partCfg) {
-    auto const id = p.p.identity - iccp3m_cfg.first_id;
-    if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
-        id >= 0) {
-          fprintf(fp, "%f ", p.adapICC.area); // p.p.q
-    }
+  for (auto & charge : charges) {
+    fprintf(fp, "%f ", charge);
   }
 
   fprintf(fp, "\n\
 VECTORS field double\n");
 
-  for (auto &p : partCfg) {
-    auto const id = p.p.identity - iccp3m_cfg.first_id;
-    if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
-        id >= 0) {
-          auto const E = p.adapICC.normal; //p.f.f / p.p.q;
-          fprintf(fp, "%f %f %f ", E[0], E[1], E[2]);
-    }
+  for (auto & force : forces) {
+    fprintf(fp, "%f %f %f ", force[0], force[1], force[2]);
   }
+
   fclose(fp);
 
   return 0;
 }
 
+int c_outputParticle(char * filename, PartCfg & partCfg) {
+  FILE *fp = fopen(filename, "w");
+
+  if (fp == nullptr) {
+    return 1;
+  }
+
+  std::vector<Vector3d> forces;
+  forces.reserve(iccp3m_cfg.first_id);
+
+  fprintf(fp, "\
+# vtk DataFile Version 3.0\n\
+vtk output\n\
+ASCII\n\
+DATASET POLYDATA\n\
+POINTS %u double\n", iccp3m_cfg.first_id);
+
+  // position
+  for (auto &p : partCfg) {
+    if (p.p.identity < iccp3m_cfg.first_id) {
+          fprintf(fp, "%f %f %f ", p.r.p[0], p.r.p[1], p.r.p[2]);
+          forces.push_back(p.f.f);
+    }
+  }
+
+  fprintf(fp, "\n\
+POINT_DATA %u\n\
+VECTORS field double\n\
+LOOKUP_TABLE default\n", iccp3m_cfg.first_id);
+
+  for (auto & force : forces) {
+    fprintf(fp, "%f %f %f ", force[0], force[1], force[2]);
+  }
+  fclose(fp);
+
+  return 0;
+}
 
 
 

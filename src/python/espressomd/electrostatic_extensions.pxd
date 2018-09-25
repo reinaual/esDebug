@@ -120,6 +120,7 @@ IF ELECTROSTATICS and P3M:
         int c_addTypeInterface(Vector3d center, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix)
 
         int c_outputVTK(char * filename, PartCfg & partCfg)
+        int c_outputParticle(char * filename, PartCfg & partCfg)
 
     cdef extern from "communication.hpp":
         int mpi_iccp3m_init()
