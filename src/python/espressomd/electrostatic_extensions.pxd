@@ -74,22 +74,18 @@ IF ELECTROSTATICS and P3M:
 
     cdef extern from "electrostatics_magnetostatics/icc.hpp":
         ctypedef struct iccp3m_struct:
-            int numMissingIDs
-            int largestID
-            int n_ic
+            bool active
             int num_iteration
             double eout
-            vector[double] areas
-            vector[double] ein
-            vector[double] sigma
             double convergence
-            vector[Vector3d] normals
             Vector3d ext_field
             double relax
             int citeration
-            int first_id
 
         ctypedef struct iccp3m_data_struct:
+            int n_icc
+            int first_id
+            int largestID
             NewParticle reducedPart
             list[vector[int]] trackList
             queue[vector[NewParticle]] newParticleData
@@ -102,15 +98,11 @@ IF ELECTROSTATICS and P3M:
         iccp3m_struct iccp3m_cfg
         iccp3m_data_struct iccp3m_data
 
-        void iccp3m_alloc_lists()
-
         void c_splitParticles(PartCfg & partCfg, bool force)
 
         void c_reduceParticle()
 
         void c_checkSet(int ID)
-
-        void c_rebuildData(PartCfg & partCfg)
 
         void c_getCharges(PartCfg & partCfg)
 

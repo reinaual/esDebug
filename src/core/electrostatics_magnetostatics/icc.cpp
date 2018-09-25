@@ -133,17 +133,8 @@ inline void add_non_bonded_pair_force_iccp3m(Particle *p1, Particle *p2,
   /***********************************************/
 }
 
-void iccp3m_alloc_lists() {
-  auto const n_ic = iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs;
-
-  iccp3m_cfg.areas.resize(n_ic);
-  iccp3m_cfg.ein.resize(n_ic);
-  iccp3m_cfg.normals.resize(n_ic);
-  iccp3m_cfg.sigma.resize(n_ic);
-}
-
 int iccp3m_iteration() {
-  if (iccp3m_cfg.n_ic == 0)
+  if (!iccp3m_cfg.active)
     return 0;
 
   iccp3m_sanity_check();
@@ -169,9 +160,7 @@ int iccp3m_iteration() {
     double diff = 0;
 
     for (auto &p : local_cells.particles()) {
-      if (p.p.identity < iccp3m_cfg.n_ic + iccp3m_cfg.first_id + iccp3m_cfg.numMissingIDs &&
-          p.p.identity >= iccp3m_cfg.first_id) {
-        auto const id = p.p.identity - iccp3m_cfg.first_id;
+      if (p.adapICC.iccTypeID >= 0) {
         /* the dielectric-related prefactor: */
         auto const del_eps = (p.adapICC.eps - iccp3m_cfg.eout) /
                              (p.adapICC.eps + iccp3m_cfg.eout);
@@ -316,9 +305,7 @@ void calc_long_range_forces_iccp3m() {
 
 void c_splitParticles(PartCfg &partCfg, bool force) {
   for (auto &p : partCfg) {
-    auto const id = p.p.identity - iccp3m_cfg.first_id;
-    if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
-        id >= 0) {
+    if (p.adapICC.iccTypeID >= 0) {
           // check if particle is splittable
           iccShape * shapePointer = iccp3m_data.iccTypes[p.adapICC.iccTypeID];
           // fprintf(stderr, "%d\n", p.adapICC.iccTypeID);
@@ -337,12 +324,12 @@ void c_splitParticles(PartCfg &partCfg, bool force) {
 
 
 void c_getCharges(PartCfg & partCfg) {
-  iccp3m_data.iccCharges.resize(iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs);
+  iccp3m_data.iccCharges.clear();
+  iccp3m_data.iccCharges.reserve(iccp3m_data.n_icc + iccp3m_data.missingIDs.size());
 
   for (auto &p : partCfg) {
-    if (p.p.identity < iccp3m_cfg.n_ic + iccp3m_cfg.first_id + iccp3m_cfg.numMissingIDs &&
-        p.p.identity >= iccp3m_cfg.first_id) {
-          iccp3m_data.iccCharges[p.p.identity - iccp3m_cfg.first_id] = p.p.q;
+    if (p.adapICC.iccTypeID >= 0) {
+          iccp3m_data.iccCharges.push_back(p.p.q);
     }
   }
 }
@@ -352,28 +339,13 @@ void c_reduceParticle() {
   // this call might not be necessary! -> direct call from cython
 }
 
-void c_rebuildData(PartCfg & partCfg) {
-  for (auto &p : partCfg) {
-    auto const id = p.p.identity - iccp3m_cfg.first_id;
-    if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
-        id >= 0) {
-          iccp3m_cfg.areas[id] = p.adapICC.area;
-          iccp3m_cfg.ein[id] = p.adapICC.eps;
-          iccp3m_cfg.sigma[id] = p.adapICC.sigma;
-          for (int i = 0; i < 3; i++) {
-            iccp3m_cfg.normals[id][i] = p.adapICC.normal[i];
-          }
-    }
-  }
-}
-
 void c_checkSet(int ID) {
   auto it = iccp3m_data.missingIDs.end();
   while (it != iccp3m_data.missingIDs.begin()) {
     if (*(--it) == ID) {
       iccp3m_data.missingIDs.erase(it);
-      iccp3m_cfg.largestID--;
-      iccp3m_cfg.n_ic--;
+      iccp3m_data.largestID--;
+      iccp3m_data.n_icc--;
       ID--;
     } else {
       break;
@@ -413,22 +385,20 @@ int c_outputVTK(char * filename, PartCfg & partCfg) {
   }
 
   std::vector<Vector3d> forces;
-  forces.reserve(iccp3m_cfg.n_ic);
+  forces.reserve(iccp3m_data.n_icc);
 
   std::vector<double> charges;
-  charges.reserve(iccp3m_cfg.n_ic);
+  charges.reserve(iccp3m_data.n_icc);
 
   fprintf(fp, "\
 # vtk DataFile Version 3.0\n\
 vtk output\n\
 ASCII\n\
 DATASET POLYDATA\n\
-POINTS %u double\n", iccp3m_cfg.n_ic);
+POINTS %u double\n", iccp3m_data.n_icc);
 
   for (auto &p : partCfg) {
-    auto const id = p.p.identity - iccp3m_cfg.first_id;
-    if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
-        id >= 0) {
+    if (p.adapICC.iccTypeID >= 0) {
           fprintf(fp, "%f %f %f ", p.r.p[0], p.r.p[1], p.r.p[2]);
           forces.push_back(p.f.f / p.p.q);
           charges.push_back(p.p.q);
@@ -438,7 +408,7 @@ POINTS %u double\n", iccp3m_cfg.n_ic);
   fprintf(fp, "\n\
 POINT_DATA %u\n\
 SCALARS charge double\n\
-LOOKUP_TABLE default\n", iccp3m_cfg.n_ic);
+LOOKUP_TABLE default\n", iccp3m_data.n_icc);
 
   for (auto & charge : charges) {
     fprintf(fp, "%f ", charge);
@@ -464,18 +434,18 @@ int c_outputParticle(char * filename, PartCfg & partCfg) {
   }
 
   std::vector<Vector3d> forces;
-  forces.reserve(iccp3m_cfg.first_id);
+  forces.reserve(iccp3m_data.first_id);
 
   fprintf(fp, "\
 # vtk DataFile Version 3.0\n\
 vtk output\n\
 ASCII\n\
 DATASET POLYDATA\n\
-POINTS %u double\n", iccp3m_cfg.first_id);
+POINTS %u double\n", iccp3m_data.first_id);
 
   // position
   for (auto &p : partCfg) {
-    if (p.p.identity < iccp3m_cfg.first_id) {
+    if (p.adapICC.iccTypeID >= 0) {
           fprintf(fp, "%f %f %f ", p.r.p[0], p.r.p[1], p.r.p[2]);
           forces.push_back(p.f.f);
     }
@@ -483,7 +453,7 @@ POINTS %u double\n", iccp3m_cfg.first_id);
 
   fprintf(fp, "\n\
 POINT_DATA %u\n\
-VECTORS field double\n", iccp3m_cfg.first_id);
+VECTORS field double\n", iccp3m_data.first_id);
 
   for (auto & force : forces) {
     fprintf(fp, "%f %f %f ", force[0], force[1], force[2]);

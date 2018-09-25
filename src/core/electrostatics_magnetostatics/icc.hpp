@@ -65,7 +65,10 @@
 
 /* iccp3m store data struct */
 struct iccp3m_data_struct {
+  int n_icc = 0;
+  int first_id = 0;
   NewParticle reducedPart;
+  int largestID = 0;
   std::list<std::vector<int>> trackList;
   std::vector<iccShape *> iccTypes;
   std::queue<std::vector<NewParticle>> newParticleData;
@@ -77,37 +80,23 @@ struct iccp3m_data_struct {
 
 /* iccp3m data structures*/
 struct iccp3m_struct {
-  int numMissingIDs = 0;
-  int largestID = 0;
-  int n_ic;                  /* Last induced id (can not be smaller than 2) */
+  bool active = false;
   int num_iteration = 30;    /* Number of max iterations                    */
   double eout = 1;           /* Dielectric constant of the bulk             */
-  std::vector<double> areas; /* Array of area of the grid elements          */
-  std::vector<double>
-      ein; /* Array of dielectric constants at each surface element */
-  std::vector<double> sigma; /* Surface Charge density */
   double convergence = 1e-2; /* Convergence criterion                       */
-  std::vector<Vector3d> normals; /* Surface normal vectors */
   Vector3d ext_field = {0, 0, 0}; /* External field */
   double relax = 0.7; /* relaxation parameter for iterative */
   int citeration = 0; /* current number of iterations*/
   int set_flag =
       0; /* flag that indicates if ICCP3M has been initialized properly
           */
-  int first_id = 0;
 
   template <typename Archive>
   void serialize(Archive &ar, long int /* version */) {
-    ar &n_ic;
     ar &num_iteration;
-    ar &first_id;
     ar &convergence;
     ar &eout;
     ar &relax;
-    ar &areas;
-    ar &ein;
-    ar &normals;
-    ar &sigma;
     ar &ext_field;
     ar &citeration;
     ar &set_flag;
@@ -121,15 +110,10 @@ extern iccp3m_data_struct iccp3m_data;
  */
 int iccp3m_iteration();
 
-/** The allocation of ICCP3M lists for python interface
- */
-void iccp3m_alloc_lists();
-
 void c_splitParticles(PartCfg &partCfg, bool force);
 void c_reduceParticle();
 
 void c_getCharges(PartCfg & partCfg);
-void c_rebuildData(PartCfg & partCfg);
 void c_checkSet(int ID);
 
 int c_addTypeWall(Vector3d cutoff,
