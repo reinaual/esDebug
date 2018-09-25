@@ -322,10 +322,8 @@ IF ELECTROSTATICS and P3M:
             rerun = False
             cdef vector[int] currID
             # loop over all particles to split
-            counter = 0
             while (iccp3m_data.newParticleData.size() != 0):
                 frontData = iccp3m_data.newParticleData.front()
-                counter += 1
                 rerun = True
                 currID.clear()
                 # first particle is only modified
@@ -381,7 +379,7 @@ IF ELECTROSTATICS and P3M:
 
         def _activate_method(self):
             check_neutrality(self._params)
-            self._set_params_in_es_core()
+            # self._set_params_in_es_core()
 
         def _deactivate_method(self):
             iccp3m_cfg.n_ic = 0
@@ -412,6 +410,7 @@ IF ELECTROSTATICS and P3M:
 
         def newParticles(self, _number):
             iccp3m_cfg.n_ic = _number
+            self.rebuildData()
 
 
         def reduceParticles(self, _system, _force=False):
@@ -473,7 +472,7 @@ IF ELECTROSTATICS and P3M:
                         print('early breakout!')
                         break
             iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size()
-            c_rebuildData(partCfg())
+            self.rebuildData()
 
         def outputICCData(self, _filename):
             if (c_outputVTK(utils.to_char_pointer(_filename), partCfg())):
