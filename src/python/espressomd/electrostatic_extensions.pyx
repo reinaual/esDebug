@@ -331,9 +331,9 @@ IF ELECTROSTATICS and P3M:
                 # first particle is only modified
                 currID.push_back(frontData[0].parentID)
 
-                print(frontData[0].charge)
-                print(frontData[0].area)
-                print(frontData[0].normal[0], frontData[0].normal[1], frontData[0].normal[2])
+                # print(frontData[0].charge)
+                # print(frontData[0].area)
+                # print(frontData[0].normal[0], frontData[0].normal[1], frontData[0].normal[2])
 
                 parentPart = _system.part[frontData[0].parentID]
                 parentPart.pos = [frontData[0].pos[0],
@@ -350,9 +350,9 @@ IF ELECTROSTATICS and P3M:
 
                 # add leftover particles
                 for i in range(1, frontData.size()):
-                    print(frontData[i].charge)
-                    print(frontData[i].area)
-                    print(frontData[i].normal[0], frontData[i].normal[1], frontData[i].normal[2])
+                    # print(frontData[i].charge)
+                    # print(frontData[i].area)
+                    # print(frontData[i].normal[0], frontData[i].normal[1], frontData[i].normal[2])
                     currID.push_back(iccp3m_cfg.largestID)
                     _system.part.add(id=iccp3m_cfg.largestID,
                                      pos=[frontData[i].pos[0],
