@@ -189,7 +189,8 @@ class SetupSimplePore(object):
                                 eps=epsilon,
                                 displace=np.array([0., DeltaPhi / 2., DeltaZ / 2.]),
                                 type=TypeID,
-                                iccTypeID=1)
+                                iccTypeID=1,
+                                fix=[1, 1, 1])
 
 
     if self.nTorusPhi > 0 and self.nTorusZ > 0:
@@ -211,7 +212,8 @@ class SetupSimplePore(object):
                                 eps=epsilon,
                                 displace=np.array([0., DeltaPhi / 2., DeltaZ / 2.]),
                                 type=TypeID,
-                                iccTypeID=2)
+                                iccTypeID=2,
+                                fix=[1, 1, 1])
 
                 pos[0][2] = pos[0][2] - self.lengthInner - 2 * (IZ + 0.5) * DeltaZ
                 pos[1][2] = -pos[1][2]
@@ -224,7 +226,8 @@ class SetupSimplePore(object):
                                 eps=epsilon,
                                 displace=np.array([0., DeltaPhi / 2., DeltaZ / 2.]),
                                 type=TypeID,
-                                iccTypeID=2)
+                                iccTypeID=2,
+                                fix=[1, 1, 1])
 
     # wall particles
     hpx = (system.box_l[0] - 2. * self.radiusOuter) / 2.
@@ -249,7 +252,8 @@ class SetupSimplePore(object):
                             eps=epsilon,
                             displace=np.array([self.radiusOuter, self.radiusOuter, 0.]),
                             type=TypeID,
-                            iccTypeID=0)
+                            iccTypeID=0,
+                            fix=[1, 1, 1])
 
             system.part.add(pos=np.dot(self.transMatrix, self.center + [fact * offset, 0, -self.length / 2.]),
                             q=initCharge,
@@ -259,7 +263,8 @@ class SetupSimplePore(object):
                             eps=epsilon,
                             displace=np.array([self.radiusOuter, self.radiusOuter, 0.]),
                             type=TypeID,
-                            iccTypeID=0)
+                            iccTypeID=0,
+                            fix=[1, 1, 1])
 
         offset += 2. * self.radiusOuter
 
@@ -275,7 +280,8 @@ class SetupSimplePore(object):
                                      eps=epsilon,
                                      displace=np.array([rem / 2., self.radiusOuter, 0.]),
                                      type=TypeID,
-                                     iccTypeID=0)
+                                     iccTypeID=0,
+                                     fix=[1, 1, 1])
 
             system.part.add(pos=np.dot(self.transMatrix, self.center + [fact * offset, 0, -self.length / 2.]),
                                      q=initCharge,
@@ -285,7 +291,8 @@ class SetupSimplePore(object):
                                      eps=epsilon,
                                      displace=np.array([rem / 2., self.radiusOuter, 0.]),
                                      type=TypeID,
-                                     iccTypeID=0)
+                                     iccTypeID=0,
+                                     fix=[1, 1, 1])
 
 
     # y-direction
@@ -302,7 +309,8 @@ class SetupSimplePore(object):
                                      eps=epsilon,
                                      displace=np.array([self.radiusOuter, self.radiusOuter, 0.]),
                                      type=TypeID,
-                                     iccTypeID=0)
+                                     iccTypeID=0,
+                                     fix=[1, 1, 1])
 
             system.part.add(pos=np.dot(self.transMatrix, self.center + [0., fact * offset, -self.length / 2.]),
                                      q=initCharge,
@@ -312,7 +320,8 @@ class SetupSimplePore(object):
                                      eps=epsilon,
                                      displace=np.array([self.radiusOuter, self.radiusOuter, 0.]),
                                      type=TypeID,
-                                     iccTypeID=0)
+                                     iccTypeID=0,
+                                     fix=[1, 1, 1])
 
         offset += 2. * self.radiusOuter
 
@@ -328,7 +337,8 @@ class SetupSimplePore(object):
                             eps=epsilon,
                             displace=np.array([self.radiusOuter, rem / 2., 0.]),
                             type=TypeID,
-                            iccTypeID=0)
+                            iccTypeID=0,
+                            fix=[1, 1, 1])
 
             system.part.add(pos=np.dot(self.transMatrix, self.center + [0., fact * offset, -self.length / 2.]),
                                      q=initCharge,
@@ -338,7 +348,8 @@ class SetupSimplePore(object):
                                      eps=epsilon,
                                      displace=np.array([self.radiusOuter, rem / 2., 0.]),
                                      type=TypeID,
-                                     iccTypeID=0)
+                                     iccTypeID=0,
+                                     fix=[1, 1, 1])
 
     # diagonal areas
     ar = hpx * hpy
@@ -353,7 +364,8 @@ class SetupSimplePore(object):
                                  displace=np.array(
                                      [hpx / 2., hpy / 2., 0.]),
                                  type=TypeID,
-                                 iccTypeID=0)
+                                 iccTypeID=0,
+                                 fix=[1, 1, 1])
 
         system.part.add(pos=np.dot(self.transMatrix, self.center + [dx, dy, -self.length / 2.]),
                                  q=initCharge,
@@ -364,7 +376,8 @@ class SetupSimplePore(object):
                                  displace=np.array(
                                      [hpx / 2., hpy / 2., 0.]),
                                  type=TypeID,
-                                 iccTypeID=0)
+                                 iccTypeID=0,
+                                 fix=[1, 1, 1])
 
     # side length of the squares in the corner of the interfaces
     a = (1. - np.sqrt(2) / 2.) * self.radiusOuter
@@ -380,7 +393,8 @@ class SetupSimplePore(object):
                                  eps=epsilon,
                                  displace=np.array([a / 2., a / 2., 0.]),
                                  type=TypeID,
-                                 iccTypeID=0)
+                                 iccTypeID=0,
+                                 fix=[1, 1, 1])
 
         system.part.add(pos=np.dot(self.transMatrix, self.center + [dx, dy, - self.length / 2.]),
                                  q=initCharge,
@@ -390,7 +404,8 @@ class SetupSimplePore(object):
                                  eps=epsilon,
                                  displace=np.array([a / 2., a / 2., 0.]),
                                  type=TypeID,
-                                 iccTypeID=0)
+                                 iccTypeID=0,
+                                 fix=[1, 1, 1])
 
     # interface particles
     ar = 0.5 * self.radiusOuter2 * (np.sqrt(2) - 0.5 - 0.25 * np.pi)
@@ -406,7 +421,8 @@ class SetupSimplePore(object):
                         eps=epsilon,
                         displace=np.array([xs, 0., 0.]),
                         type=TypeID,
-                        iccTypeID=3)
+                        iccTypeID=3,
+                        fix=[1, 1, 1])
 
         system.part.add(pos=np.dot(self.transMatrix, self.center + [dx, dy, -self.length / 2.]),
                                  q=initCharge,
@@ -416,7 +432,8 @@ class SetupSimplePore(object):
                                  eps=epsilon,
                                  displace=np.array([xs, 0., 0.]),
                                  type=TypeID,
-                                 iccTypeID=3)
+                                 iccTypeID=3,
+                                 fix=[1, 1, 1])
 
         system.part.add(pos=np.dot(self.transMatrix, self.center + [dy, dx, self.length / 2.]),
                                  q=initCharge,
@@ -426,7 +443,8 @@ class SetupSimplePore(object):
                                  eps=epsilon,
                                  displace=np.array([0., xs, 0.]),
                                  type=TypeID,
-                                 iccTypeID=4)
+                                 iccTypeID=4,
+                                 fix=[1, 1, 1])
 
         system.part.add(pos=np.dot(self.transMatrix, self.center + [dy, dx, -self.length / 2.]),
                                  q=initCharge,
@@ -436,7 +454,8 @@ class SetupSimplePore(object):
                                  eps=epsilon,
                                  displace=np.array([0., xs, 0.]),
                                  type=TypeID,
-                                 iccTypeID=4)
+                                 iccTypeID=4,
+                                 fix=[1, 1, 1])
 
 
 
