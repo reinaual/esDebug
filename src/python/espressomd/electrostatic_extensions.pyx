@@ -201,11 +201,16 @@ IF ELECTROSTATICS and P3M:
             check_range_or_except(
                 self._params, "first_id", 0, True, "inf", True)
 
+            check_type_or_throw_except(
+                    self._params["active"], 1, int, "")
+            check_range_or_except(
+                self._params, "active", 0, True, 1, True)
+
         def valid_keys(self):
-            return "convergence", "relaxation", "ext_field", "max_iterations", "eps_out", "check_neutrality", "maxCharge", "minCharge", "n_icc", "first_id"
+            return "convergence", "relaxation", "ext_field", "max_iterations", "eps_out", "check_neutrality", "maxCharge", "minCharge", "n_icc", "first_id", "active"
 
         def required_keys(self):
-            return ["maxCharge", "minCharge", "eps_out", "n_icc", "first_id"]
+            return ["maxCharge", "minCharge", "eps_out", "n_icc", "first_id", "active"]
 
         def default_params(self):
             return {"n_icc": 0,
@@ -217,27 +222,26 @@ IF ELECTROSTATICS and P3M:
                     "check_neutrality": True,
                     "maxCharge": 0.,
                     "minCharge": 0.,
-                    "largestID": 0}
+                    "largestID": 0,
+                    "active": 0}
 
         def _get_params_from_es_core(self):
-            params = {}
-
-            params["ext_field"] = [iccp3m_cfg.ext_field[0],
+            self._params["ext_field"] = [iccp3m_cfg.ext_field[0],
                                    iccp3m_cfg.ext_field[1], iccp3m_cfg.ext_field[2]]
-            params["max_iterations"] = iccp3m_cfg.num_iteration
-            params["convergence"] = iccp3m_cfg.convergence
-            params["relaxation"] = iccp3m_cfg.relax
-            params["eps_out"] = iccp3m_cfg.eout
+            self._params["max_iterations"] = iccp3m_cfg.num_iteration
+            self._params["convergence"] = iccp3m_cfg.convergence
+            self._params["relaxation"] = iccp3m_cfg.relax
+            self._params["eps_out"] = iccp3m_cfg.eout
 
-            params["maxCharge"] = iccp3m_data.maxCharge
-            params["minCharge"] = iccp3m_data.minCharge
+            self._params["maxCharge"] = iccp3m_data.maxCharge
+            self._params["minCharge"] = iccp3m_data.minCharge
 
-            params["largestID"] = iccp3m_data.largestID
-            params["n_icc"] = iccp3m_data.n_icc
-            params["first_id"] = iccp3m_data.first_id
+            self._params["largestID"] = iccp3m_data.largestID
+            self._params["n_icc"] = iccp3m_data.n_icc
+            self._params["first_id"] = iccp3m_data.first_id
+            self._params["active"] = iccp3m_cfg.active
 
-
-            return params
+            return self._params
 
         def _set_params_in_es_core(self):
             iccp3m_cfg.ext_field[0] = self._params["ext_field"][0]
@@ -253,6 +257,7 @@ IF ELECTROSTATICS and P3M:
             iccp3m_data.largestID = self._params["n_icc"] + self._params["first_id"]
             iccp3m_data.n_icc = self._params["n_icc"]
             iccp3m_data.first_id = self._params["first_id"]
+            iccp3m_cfg.active = self._params["active"]
 
             # Broadcasts vars
             mpi_iccp3m_init()
@@ -318,13 +323,14 @@ IF ELECTROSTATICS and P3M:
 
         def _activate_method(self):
             check_neutrality(self._params)
-            iccp3m_cfg.active = True
+            self._params["active"] = 1
+            self._set_params_in_es_core()
 
             mpi_iccp3m_init()
-            # self._set_params_in_es_core()
 
         def _deactivate_method(self):
-            iccp3m_cfg.active = False
+            self._params["active"] = 0
+            self._set_params_in_es_core()
 
             # Broadcasts vars
             mpi_iccp3m_init()
@@ -345,15 +351,16 @@ IF ELECTROSTATICS and P3M:
             skip = False
             summe = 0.;
 
-            c_getCharges(partCfg())
+            # c_getCharges(partCfg())
             for vec in reversed(iccp3m_data.trackList):
                 skip = False
 
                 # check if any particle is unreducable
                 if not any(noReduce.count(vec[i]) for i in range(len(vec))):
                     # calculate charge sum
+                    summe = 0.;
                     for i in range(len(vec)):
-                        summe += iccp3m_data.iccCharges[i]
+                        summe += _system.part[vec[i]].q
                     if _force or abs(summe) < iccp3m_data.minCharge:
 
                         part = _system.part[vec[0]]
@@ -392,10 +399,15 @@ IF ELECTROSTATICS and P3M:
                         # print('{} - {}'.format(vec, len(_system.part)))
                         _system.part[vec[1]:vec[-1]+1].remove()
                         iccp3m_data.trackList.remove(vec)
+                    else:
+                        for i in range(len(vec)):
+                            noReduce.insert(vec[i])
                 else:
-                    print('actually got to else!')
-                    noReduce.insert(vec)
+                    for i in range(len(vec)):
+                        noReduce.insert(vec[i])
                     # here would be the place for an early breakout!
+                    if len(noReduce) >= iccp3m_data.n_icc:
+                        break
 
         def outputICCData(self, _filename):
             if (c_outputVTK(utils.to_char_pointer(_filename), partCfg())):
