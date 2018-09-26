@@ -134,8 +134,9 @@ inline void add_non_bonded_pair_force_iccp3m(Particle *p1, Particle *p2,
 }
 
 int iccp3m_iteration() {
-  if (!iccp3m_cfg.active)
+  if (!iccp3m_cfg.active) {
     return 0;
+  }
 
   iccp3m_sanity_check();
 
@@ -216,6 +217,7 @@ int iccp3m_iteration() {
     ghost_communicator(&cell_structure.exchange_ghosts_comm);
 
     iccp3m_cfg.citeration++;
+    // fprintf(stderr, "%d: icc_iteratrion %d:\n", this_node, iccp3m_cfg.citeration);
 
     MPI_Allreduce(&diff, &globalmax, 1, MPI_DOUBLE, MPI_MAX, comm_cart);
 
@@ -445,7 +447,7 @@ POINTS %u double\n", iccp3m_data.first_id);
 
   // position
   for (auto &p : partCfg) {
-    if (p.adapICC.iccTypeID >= 0) {
+    if (p.adapICC.iccTypeID < 0) {
           fprintf(fp, "%f %f %f ", p.r.p[0], p.r.p[1], p.r.p[2]);
           forces.push_back(p.f.f);
     }
