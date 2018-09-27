@@ -479,6 +479,7 @@ int iccp3m_sanity_check() {
   switch (coulomb.method) {
 #ifdef P3M
   case COULOMB_ELC_P3M: {
+    break;
     if (elc_params.dielectric_contrast_on) {
       runtimeErrorMsg() << "ICCP3M conflicts with ELC dielectric constrast";
       return 1;
