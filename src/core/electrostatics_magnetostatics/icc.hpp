@@ -71,8 +71,6 @@ struct iccp3m_data_struct {
   std::vector<iccShape *> iccTypes;
   std::queue<std::vector<NewParticle>> newParticleData;
   std::vector<double> iccCharges;
-  double maxCharge = 0.;
-  double minCharge = 0.;
   std::set<int> missingIDs;
 };
 
@@ -91,6 +89,8 @@ struct iccp3m_struct {
       0; /* flag that indicates if ICCP3M has been initialized properly
           */
   int first_id = 0;
+  double maxCharge = 0.;
+  double minCharge = 0.;
 
   template <typename Archive>
   void serialize(Archive &ar, long int /* version */) {
@@ -104,6 +104,8 @@ struct iccp3m_struct {
     ar &citeration;
     ar &set_flag;
     ar &active;
+    ar &minCharge;
+    ar &maxCharge;
   }
 };
 extern iccp3m_struct iccp3m_cfg; /* global variable with ICCP3M configuration */
@@ -114,15 +116,9 @@ extern iccp3m_data_struct iccp3m_data;
  */
 int iccp3m_iteration();
 
-/** The allocation of ICCP3M lists for python interface
- */
-void iccp3m_alloc_lists();
-
 void c_splitParticles(PartCfg &partCfg, bool force);
 void c_reduceParticle();
 
-void c_getCharges(PartCfg & partCfg);
-void c_rebuildData(PartCfg & partCfg);
 void c_checkSet(int ID);
 
 int c_addTypeWall(Vector3d cutoff,

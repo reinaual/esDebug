@@ -76,7 +76,7 @@ IF ELECTROSTATICS and P3M:
         ctypedef struct iccp3m_struct:
             bool active
             int numMissingIDs
-            int n_ic
+            int n_icc
             int num_iteration
             double eout
             double convergence
@@ -84,6 +84,8 @@ IF ELECTROSTATICS and P3M:
             double relax
             int citeration
             int first_id
+            double maxCharge
+            double minCharge
 
         ctypedef struct iccp3m_data_struct:
             int largestID
@@ -92,24 +94,16 @@ IF ELECTROSTATICS and P3M:
             queue[vector[NewParticle]] newParticleData
             vector[double] iccCharges
             set[int] missingIDs
-            double maxCharge
-            double minCharge
 
         # links intern C-struct with python object
         iccp3m_struct iccp3m_cfg
         iccp3m_data_struct iccp3m_data
-
-        void iccp3m_alloc_lists()
 
         void c_splitParticles(PartCfg & partCfg, bool force)
 
         void c_reduceParticle()
 
         void c_checkSet(int ID)
-
-        void c_rebuildData(PartCfg & partCfg)
-
-        void c_getCharges(PartCfg & partCfg)
 
         int c_addTypeWall(Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9])
         int c_addTypeCylinder(Vector3d center, Vector3d axis, double length, double radius, double direction, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix)

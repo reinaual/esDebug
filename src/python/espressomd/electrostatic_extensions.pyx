@@ -224,39 +224,39 @@ IF ELECTROSTATICS and P3M:
                     "maxCharge": 0.,
                     "minCharge": 0.}
 
-            def _get_params_from_es_core(self):
-                self._params["ext_field"] = [iccp3m_cfg.ext_field[0],
-                                       iccp3m_cfg.ext_field[1], iccp3m_cfg.ext_field[2]]
-                self._params["max_iterations"] = iccp3m_cfg.num_iteration
-                self._params["convergence"] = iccp3m_cfg.convergence
-                self._params["relaxation"] = iccp3m_cfg.relax
-                self._params["eps_out"] = iccp3m_cfg.eout
+        def _get_params_from_es_core(self):
+            self._params["ext_field"] = [iccp3m_cfg.ext_field[0],
+                                   iccp3m_cfg.ext_field[1], iccp3m_cfg.ext_field[2]]
+            self._params["max_iterations"] = iccp3m_cfg.num_iteration
+            self._params["convergence"] = iccp3m_cfg.convergence
+            self._params["relaxation"] = iccp3m_cfg.relax
+            self._params["eps_out"] = iccp3m_cfg.eout
 
-                self._params["maxCharge"] = iccp3m_cfg.maxCharge
-                self._params["minCharge"] = iccp3m_cfg.minCharge
+            self._params["maxCharge"] = iccp3m_cfg.maxCharge
+            self._params["minCharge"] = iccp3m_cfg.minCharge
 
-                self._params["largestID"] = iccp3m_data.largestID
-                self._params["n_icc"] = iccp3m_cfg.n_icc
-                self._params["first_id"] = iccp3m_cfg.first_id
-                self._params["active"] = iccp3m_cfg.active
+            self._params["largestID"] = iccp3m_data.largestID
+            self._params["n_icc"] = iccp3m_cfg.n_icc
+            self._params["first_id"] = iccp3m_cfg.first_id
+            self._params["active"] = iccp3m_cfg.active
 
-                return self._params
+            return self._params
 
-            def _set_params_in_es_core(self):
-                iccp3m_cfg.ext_field[0] = self._params["ext_field"][0]
-                iccp3m_cfg.ext_field[1] = self._params["ext_field"][1]
-                iccp3m_cfg.ext_field[2] = self._params["ext_field"][2]
-                iccp3m_cfg.num_iteration = self._params["max_iterations"]
-                iccp3m_cfg.convergence = self._params["convergence"]
-                iccp3m_cfg.relax = self._params["relaxation"]
-                iccp3m_cfg.eout = self._params["eps_out"]
-                iccp3m_cfg.citeration = 0
-                iccp3m_cfg.maxCharge = self._params["maxCharge"]
-                iccp3m_cfg.minCharge = self._params["minCharge"]
-                iccp3m_data.largestID = self._params["n_icc"] + self._params["first_id"]
-                iccp3m_cfg.n_icc = self._params["n_icc"]
-                iccp3m_cfg.first_id = self._params["first_id"]
-                iccp3m_cfg.active = self._params["active"]
+        def _set_params_in_es_core(self):
+            iccp3m_cfg.ext_field[0] = self._params["ext_field"][0]
+            iccp3m_cfg.ext_field[1] = self._params["ext_field"][1]
+            iccp3m_cfg.ext_field[2] = self._params["ext_field"][2]
+            iccp3m_cfg.num_iteration = self._params["max_iterations"]
+            iccp3m_cfg.convergence = self._params["convergence"]
+            iccp3m_cfg.relax = self._params["relaxation"]
+            iccp3m_cfg.eout = self._params["eps_out"]
+            iccp3m_cfg.citeration = 0
+            iccp3m_cfg.maxCharge = self._params["maxCharge"]
+            iccp3m_cfg.minCharge = self._params["minCharge"]
+            iccp3m_data.largestID = self._params["n_icc"] + self._params["first_id"]
+            iccp3m_cfg.n_icc = self._params["n_icc"]
+            iccp3m_cfg.first_id = self._params["first_id"]
+            iccp3m_cfg.active = self._params["active"]
 
             # Broadcasts vars
             mpi_iccp3m_init()
@@ -312,7 +312,7 @@ IF ELECTROSTATICS and P3M:
                                      iccTypeID=frontData[i].iccTypeID,
                                      type=frontData[i].typeID,
                                      fix=[1, 1, 1])
-                    iccp3m_data.n_icc += 1
+                    iccp3m_cfg.n_icc += 1
                     iccp3m_data.largestID += 1
                 # remove vector from list
                 iccp3m_data.newParticleData.pop()
@@ -340,16 +340,11 @@ IF ELECTROSTATICS and P3M:
                 if _rerun:
                     self.splitParticles(_system, _rerun=True, _force=_force)
 
-        def outputCharges(self):
-            c_getCharges(partCfg())
-            return iccp3m_data.iccCharges
-
         def reduceParticles(self, _system, _force=False):
             cdef set[int] noReduce
             skip = False
             summe = 0.;
 
-            # c_getCharges(partCfg())
             for vec in reversed(iccp3m_data.trackList):
                 skip = False
 
@@ -386,7 +381,7 @@ IF ELECTROSTATICS and P3M:
                                          iccp3m_data.reducedPart.displace[1],
                                          iccp3m_data.reducedPart.displace[2]]
 
-                        iccp3m_data.n_icc -= len(vec) - 1
+                        iccp3m_cfg.n_icc -= len(vec) - 1
                         if vec[-1] == (iccp3m_data.largestID - 1):
                             iccp3m_data.largestID -= len(vec) - 1
                             c_checkSet(vec[1] - 1)
