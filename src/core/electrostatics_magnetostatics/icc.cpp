@@ -52,6 +52,8 @@
 #include "particle_data.hpp"
 #include "partCfg_global.hpp"
 
+#include "grid.hpp"
+
 #include "short_range_loop.hpp"
 #include "utils/NoOp.hpp"
 
@@ -448,7 +450,8 @@ POINTS %u double\n", iccp3m_data.first_id);
   // position
   for (auto &p : partCfg) {
     if (p.adapICC.iccTypeID < 0) {
-          fprintf(fp, "%f %f %f ", p.r.p[0], p.r.p[1], p.r.p[2]);
+          auto pp = folded_position(p);
+          fprintf(fp, "%f %f %f ", pp[0], pp[1], pp[2]);
           forces.push_back(p.f.f);
     }
   }
