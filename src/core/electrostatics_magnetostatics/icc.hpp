@@ -67,6 +67,7 @@
 struct iccp3m_data_struct {
   int largestID = 0;
   NewParticle reducedPart;
+  std::vector<iccShape *> iccTypes;
   std::list<std::vector<int>> trackList;
   std::queue<std::vector<NewParticle>> newParticleData;
   std::vector<double> iccCharges;
@@ -90,7 +91,6 @@ struct iccp3m_struct {
   int first_id = 0;
   double maxCharge = 0.;
   double minCharge = 0.;
-  std::vector<iccShape *> iccTypes;
 
   template <typename Archive>
   void serialize(Archive &ar, long int /* version */) {
