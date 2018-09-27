@@ -430,7 +430,9 @@ IF ELECTROSTATICS and P3M:
 
             useTrans = _useTrans
 
-            return c_addTypeWall(cutoff, useTrans, transMatrix, invMatrix)
+            out = c_addTypeWall(cutoff, useTrans, transMatrix, invMatrix)
+            mpi_iccp3m_init()
+            return out
 
         def addTypeCylinder(self, _center, _axis, _length, _radius, _direction, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
             cdef Vector3d center
@@ -469,7 +471,11 @@ IF ELECTROSTATICS and P3M:
 
             useTrans = _useTrans
 
-            return c_addTypeCylinder(center, axis, length, radius, direction, cutoff, useTrans, transMatrix, invMatrix)
+            out = c_addTypeCylinder(center, axis, length, radius, direction, cutoff, useTrans, transMatrix, invMatrix)
+            mpi_iccp3m_init()
+            return out
+
+
         def addTypeTorus(self, _center, _axis, _length, _radius, _smoothingRadius, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
             cdef Vector3d center
             cdef Vector3d axis
@@ -506,7 +512,9 @@ IF ELECTROSTATICS and P3M:
 
             useTrans = _useTrans
 
-            return c_addTypeTorus(center, axis, length, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix)
+            out = c_addTypeTorus(center, axis, length, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix)
+            mpi_iccp3m_init()
+            return out
 
         def addTypeInterface(self,_center, _radius, _smoothingRadius, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
             cdef Vector3d center
@@ -538,4 +546,6 @@ IF ELECTROSTATICS and P3M:
 
             useTrans = _useTrans
 
-            return c_addTypeInterface(center, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix)
+            out = c_addTypeInterface(center, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix)
+            mpi_iccp3m_init()
+            return out

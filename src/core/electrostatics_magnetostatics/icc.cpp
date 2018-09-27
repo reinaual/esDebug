@@ -312,7 +312,7 @@ void c_splitParticles(PartCfg &partCfg, bool force) {
     if (id < iccp3m_cfg.n_icc + iccp3m_cfg.numMissingIDs &&
         id >= 0) {
           // check if particle is splittable
-          iccShape * shapePointer = iccp3m_data.iccTypes[p.adapICC.iccTypeID];
+          iccShape * shapePointer = iccp3m_cfg.iccTypes[p.adapICC.iccTypeID];
           // fprintf(stderr, "%d\n", p.adapICC.iccTypeID);
           if (shapePointer->cutoff[0] <= p.adapICC.displace[0] &&
               shapePointer->cutoff[1] <= p.adapICC.displace[1] &&
@@ -328,7 +328,7 @@ void c_splitParticles(PartCfg &partCfg, bool force) {
 }
 
 void c_reduceParticle() {
-  iccp3m_data.iccTypes[iccp3m_data.reducedPart.iccTypeID]->reduceExt(iccp3m_data.reducedPart);
+  iccp3m_cfg.iccTypes[iccp3m_data.reducedPart.iccTypeID]->reduceExt(iccp3m_data.reducedPart);
   // this call might not be necessary! -> direct call from cython
 }
 
@@ -348,26 +348,26 @@ void c_checkSet(int ID) {
 
 int c_addTypeWall(Vector3d cutoff, bool useTrans, double transMatrix[9], double invMatrix[9]) {
   iccWall * wall = new iccWall(cutoff, useTrans, &transMatrix[0], &invMatrix[0]);
-  iccp3m_data.iccTypes.push_back(wall);
-  return iccp3m_data.iccTypes.size();
+  iccp3m_cfg.iccTypes.push_back(wall);
+  return iccp3m_cfg.iccTypes.size();
 }
 
 int c_addTypeCylinder(Vector3d center, Vector3d axis, double length, double radius, double direction, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {
   iccCylinder * cylinder = new iccCylinder(center, axis, length, radius, direction, cutoff, useTrans, transMatrix, invMatrix);
-  iccp3m_data.iccTypes.push_back(cylinder);
-  return iccp3m_data.iccTypes.size();
+  iccp3m_cfg.iccTypes.push_back(cylinder);
+  return iccp3m_cfg.iccTypes.size();
 }
 
 int c_addTypeTorus(Vector3d center, Vector3d axis, double length, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {
   iccTorus * torus = new iccTorus(center, axis, length, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix);
-  iccp3m_data.iccTypes.push_back(torus);
-  return iccp3m_data.iccTypes.size();
+  iccp3m_cfg.iccTypes.push_back(torus);
+  return iccp3m_cfg.iccTypes.size();
 }
 
 int c_addTypeInterface(Vector3d center, double radius, double smoothingRadius, Vector3d cutoff, bool useTrans, double * transMatrix, double * invMatrix) {
   iccInterface * interface = new iccInterface(center, radius, smoothingRadius, cutoff, useTrans, transMatrix, invMatrix);
-  iccp3m_data.iccTypes.push_back(interface);
-  return iccp3m_data.iccTypes.size();
+  iccp3m_cfg.iccTypes.push_back(interface);
+  return iccp3m_cfg.iccTypes.size();
 }
 
 int c_outputVTK(char * filename, PartCfg & partCfg) {
