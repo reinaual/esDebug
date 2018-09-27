@@ -275,9 +275,9 @@ void calc_long_range_forces_iccp3m() {
   switch (coulomb.method) {
 #ifdef P3M
   case COULOMB_ELC_P3M:
-    if (elc_params.dielectric_contrast_on) {
-      runtimeErrorMsg() << "ICCP3M conflicts with ELC dielectric constrast";
-    }
+    // if (elc_params.dielectric_contrast_on) {
+    //   runtimeErrorMsg() << "ICCP3M conflicts with ELC dielectric constrast";
+    // }
     p3m_charge_assign();
     p3m_calc_kspace_forces(1, 0);
     ELC_add_force();
@@ -479,11 +479,10 @@ int iccp3m_sanity_check() {
   switch (coulomb.method) {
 #ifdef P3M
   case COULOMB_ELC_P3M: {
-    break;
-    if (elc_params.dielectric_contrast_on) {
-      runtimeErrorMsg() << "ICCP3M conflicts with ELC dielectric constrast";
-      return 1;
-    }
+    // if (elc_params.dielectric_contrast_on) {
+    //   runtimeErrorMsg() << "ICCP3M conflicts with ELC dielectric constrast";
+    //   return 1;
+    // }
     break;
   }
 #endif
