@@ -65,6 +65,7 @@
 
 /* iccp3m store data struct */
 struct iccp3m_data_struct {
+  int largestID = 0;
   NewParticle reducedPart;
   std::list<std::vector<int>> trackList;
   std::vector<iccShape *> iccTypes;
@@ -77,17 +78,12 @@ struct iccp3m_data_struct {
 
 /* iccp3m data structures*/
 struct iccp3m_struct {
+  bool active = false;
   int numMissingIDs = 0;
-  int largestID = 0;
-  int n_ic;                  /* Last induced id (can not be smaller than 2) */
+  int n_icc;                  /* Last induced id (can not be smaller than 2) */
   int num_iteration = 30;    /* Number of max iterations                    */
   double eout = 1;           /* Dielectric constant of the bulk             */
-  std::vector<double> areas; /* Array of area of the grid elements          */
-  std::vector<double>
-      ein; /* Array of dielectric constants at each surface element */
-  std::vector<double> sigma; /* Surface Charge density */
   double convergence = 1e-2; /* Convergence criterion                       */
-  std::vector<Vector3d> normals; /* Surface normal vectors */
   Vector3d ext_field = {0, 0, 0}; /* External field */
   double relax = 0.7; /* relaxation parameter for iterative */
   int citeration = 0; /* current number of iterations*/
@@ -98,19 +94,16 @@ struct iccp3m_struct {
 
   template <typename Archive>
   void serialize(Archive &ar, long int /* version */) {
-    ar &n_ic;
+    ar &n_icc;
     ar &num_iteration;
     ar &first_id;
     ar &convergence;
     ar &eout;
     ar &relax;
-    ar &areas;
-    ar &ein;
-    ar &normals;
-    ar &sigma;
     ar &ext_field;
     ar &citeration;
     ar &set_flag;
+    ar &active;
   }
 };
 extern iccp3m_struct iccp3m_cfg; /* global variable with ICCP3M configuration */

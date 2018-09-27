@@ -74,22 +74,19 @@ IF ELECTROSTATICS and P3M:
 
     cdef extern from "electrostatics_magnetostatics/icc.hpp":
         ctypedef struct iccp3m_struct:
+            bool active
             int numMissingIDs
-            int largestID
             int n_ic
             int num_iteration
             double eout
-            vector[double] areas
-            vector[double] ein
-            vector[double] sigma
             double convergence
-            vector[Vector3d] normals
             Vector3d ext_field
             double relax
             int citeration
             int first_id
 
         ctypedef struct iccp3m_data_struct:
+            int largestID
             NewParticle reducedPart
             list[vector[int]] trackList
             queue[vector[NewParticle]] newParticleData

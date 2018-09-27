@@ -51,6 +51,7 @@
 #include "nonbonded_interactions/nonbonded_interaction_data.hpp"
 #include "particle_data.hpp"
 #include "partCfg_global.hpp"
+#include "grid.hpp"
 
 #include "short_range_loop.hpp"
 #include "utils/NoOp.hpp"
@@ -143,7 +144,7 @@ void iccp3m_alloc_lists() {
 }
 
 int iccp3m_iteration() {
-  if (iccp3m_cfg.n_ic == 0)
+  if (!iccp3m_cfg.active)
     return 0;
 
   iccp3m_sanity_check();
@@ -282,9 +283,9 @@ void calc_long_range_forces_iccp3m() {
   switch (coulomb.method) {
 #ifdef P3M
   case COULOMB_ELC_P3M:
-    if (elc_params.dielectric_contrast_on) {
-      runtimeErrorMsg() << "ICCP3M conflicts with ELC dielectric constrast";
-    }
+    // if (elc_params.dielectric_contrast_on) {
+    //   runtimeErrorMsg() << "ICCP3M conflicts with ELC dielectric constrast";
+    // }
     p3m_charge_assign();
     p3m_calc_kspace_forces(1, 0);
     ELC_add_force();
@@ -372,7 +373,7 @@ void c_checkSet(int ID) {
   while (it != iccp3m_data.missingIDs.begin()) {
     if (*(--it) == ID) {
       iccp3m_data.missingIDs.erase(it);
-      iccp3m_cfg.largestID--;
+      iccp3m_data.largestID--;
       iccp3m_cfg.n_ic--;
       ID--;
     } else {
@@ -429,7 +430,8 @@ POINTS %u double\n", iccp3m_cfg.n_ic);
     auto const id = p.p.identity - iccp3m_cfg.first_id;
     if (id < iccp3m_cfg.n_ic + iccp3m_cfg.numMissingIDs &&
         id >= 0) {
-          fprintf(fp, "%f %f %f ", p.r.p[0], p.r.p[1], p.r.p[2]);
+          auto pp = folded_position(p);
+          fprintf(fp, "%f %f %f ", pp[0], pp[1], pp[2]);
           forces.push_back(p.f.f / p.p.q);
           charges.push_back(p.p.q);
     }
@@ -504,10 +506,10 @@ int iccp3m_sanity_check() {
   switch (coulomb.method) {
 #ifdef P3M
   case COULOMB_ELC_P3M: {
-    if (elc_params.dielectric_contrast_on) {
-      runtimeErrorMsg() << "ICCP3M conflicts with ELC dielectric constrast";
-      return 1;
-    }
+    // if (elc_params.dielectric_contrast_on) {
+    //   runtimeErrorMsg() << "ICCP3M conflicts with ELC dielectric constrast";
+    //   return 1;
+    // }
     break;
   }
 #endif

@@ -5,7 +5,7 @@ from numpy.linalg import inv
 
 class SetupWall(object):
 
-    def __init__(self, system, dist, normal, nICC, transMatrix=None, invMatrix=None, typeIDoffset=None):
+    def __init__(self, dist, normal, nICC, transMatrix=None, invMatrix=None, typeIDoffset=None):
 
         if hasattr(normal, '__iter__'):
             self.normal = np.array(normal, dtype=float)
@@ -21,7 +21,6 @@ class SetupWall(object):
         if not isinstance(nICC, int):
             raise TypeError('number of icc particles has to be an int')
 
-        self.system = system
         self.dist = dist
         self.nICC = nICC
         self.pos = self.normal / np.sqrt(np.sum(np.square(self.normal))) * self.dist
@@ -75,7 +74,7 @@ class SetupWall(object):
                                  _invMatrix=self.invMatrix.flatten())
 
 
-    def initParticles(self, particleTypeID, iccTypeID, initCharge, sigma, epsilon, splitCutoff=0.):
+    def initParticles(self, system, particleTypeID, iccTypeID, initCharge, sigma, epsilon, splitCutoff=0.):
         '''
           initialize all particles for given parts
 
@@ -134,16 +133,16 @@ class SetupWall(object):
 #                                 _invMatrix=invMatrix.flatten())
 
 
-        dx = self.system.box_l[0] / self.nICC
-        dy = self.system.box_l[1] / self.nICC
+        dx = system.box_l[0] / self.nICC
+        dy = system.box_l[1] / self.nICC
 
-        area = self.system.box_l[0] * self.system.box_l[1] / (self.nICC * self.nICC)
+        area = system.box_l[0] * system.box_l[1] / (self.nICC * self.nICC)
 
         for i in range(self.nICC):
             x = (i + 0.5) * dx
             for j in range(self.nICC):
                 y = (j + 0.5) * dy
-                self.system.part.add(pos=np.dot(self.transMatrix, self.pos + [x, y, 0.]),
+                system.part.add(pos=np.dot(self.transMatrix, self.pos + [x, y, 0.]),
                                          q=initCharge,
                                          normal=np.array([0., 0., 1.]),
                                          area=area,

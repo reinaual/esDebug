@@ -184,11 +184,6 @@ IF ELECTROSTATICS and P3M:
                 self._params, "max_iterations", 0, False, "inf", True)
 
             check_type_or_throw_except(
-                self._params["first_id"], 1, int, "")
-            check_range_or_except(
-                self._params, "first_id", 0, True, "inf", True)
-
-            check_type_or_throw_except(
                 self._params["eps_out"], 1, float, "")
 
             check_type_or_throw_except(
@@ -201,119 +196,67 @@ IF ELECTROSTATICS and P3M:
             check_range_or_except(
                 self._params, "minCharge", 0, True, "inf", True)
 
-            # Required list input
-            self._params["normals"] = np.array(self._params["normals"])
-            if self._params["normals"].size != self._params["n_icc"] * 3:
-                raise ValueError(
-                    "Expecting normal list with " + self._params["n_icc"] * 3 + " entries.")
-            check_type_or_throw_except(self._params["normals"], self._params[
-                "n_icc"], np.ndarray, "Error in normal list.")
+            check_type_or_throw_except(
+                    self._params["first_id"], 1, int, "")
+            check_range_or_except(
+                self._params, "first_id", 0, True, "inf", True)
 
             check_type_or_throw_except(
-                self._params["areas"], self._params["n_icc"], float, "Error in area list.")
-
-            # Not Required
-            if "sigmas" in self._params.keys():
-                check_type_or_throw_except(
-                    self._params["sigmas"], self._params["n_icc"], float, "Error in sigma list.")
-            else:
-                self._params["sigmas"] = np.zeros(self._params["n_icc"])
-
-            if "epsilons" in self._params.keys():
-                check_type_or_throw_except(
-                    self._params["epsilons"], self._params["n_icc"], float, "Error in epsilon list.")
-            else:
-                self._params["epsilons"] = np.zeros(self._params["n_icc"])
-
-            if not ("maxCharge" in self._params.keys() and "minCharge" in self._params.keys()):
-                self._params["maxCharge"] = 0.
-                self._params["minCharge"] = 0.
+                    self._params["active"], 1, int, "")
+            check_range_or_except(
+                self._params, "active", 0, True, 1, True)
 
         def valid_keys(self):
-            return "n_icc", "convergence", "relaxation", "ext_field", "max_iterations", "first_id", "eps_out", "normals", "areas", "sigmas", "epsilons", "check_neutrality", "maxCharge", "minCharge"
+            return "convergence", "relaxation", "ext_field", "max_iterations", "eps_out", "check_neutrality", "maxCharge", "minCharge", "n_icc", "first_id", "active"
 
         def required_keys(self):
-            return [ "n_icc", "normals", "areas"]
+            return [ "n_icc", "maxCharge", "minCharge", "eps_out", "first_id", "active"]
 
         def default_params(self):
             return {"n_icc": 0,
+                    "first_id": 0,
                     "convergence": 1e-3,
                     "relaxation": 0.7,
                     "ext_field": [0, 0, 0],
                     "max_iterations": 100,
-                    "first_id": 0,
                     "eps_out": 1,
-                    "normals": [],
-                    "areas": [],
-                    "sigmas": [],
-                    "epsilons": [],
                     "check_neutrality": True,
                     "maxCharge": 0.,
                     "minCharge": 0.}
 
-        def _get_params_from_es_core(self):
-            params = {}
-            params["n_icc"] = iccp3m_cfg.n_ic
+            def _get_params_from_es_core(self):
+                self._params["ext_field"] = [iccp3m_cfg.ext_field[0],
+                                       iccp3m_cfg.ext_field[1], iccp3m_cfg.ext_field[2]]
+                self._params["max_iterations"] = iccp3m_cfg.num_iteration
+                self._params["convergence"] = iccp3m_cfg.convergence
+                self._params["relaxation"] = iccp3m_cfg.relax
+                self._params["eps_out"] = iccp3m_cfg.eout
 
-            # Fill Lists
-            normals = []
-            areas = []
-            sigmas = []
-            epsilons = []
-            for i in range(iccp3m_cfg.n_ic):
-                normals.append([iccp3m_cfg.normals[i][0], iccp3m_cfg.normals[
-                               i][1], iccp3m_cfg.normals[i][2]])
-                areas.append(iccp3m_cfg.areas[i])
-                epsilons.append(iccp3m_cfg.ein[i])
-                sigmas.append(iccp3m_cfg.sigma[i])
+                self._params["maxCharge"] = iccp3m_cfg.maxCharge
+                self._params["minCharge"] = iccp3m_cfg.minCharge
 
-            params["normals"] = normals
-            params["areas"] = areas
-            params["epsilons"] = epsilons
-            params["sigmas"] = sigmas
+                self._params["largestID"] = iccp3m_data.largestID
+                self._params["n_icc"] = iccp3m_cfg.n_icc
+                self._params["first_id"] = iccp3m_cfg.first_id
+                self._params["active"] = iccp3m_cfg.active
 
-            params["ext_field"] = [iccp3m_cfg.ext_field[0],
-                                   iccp3m_cfg.ext_field[1], iccp3m_cfg.ext_field[2]]
-            params["first_id"] = iccp3m_cfg.first_id
-            params["max_iterations"] = iccp3m_cfg.num_iteration
-            params["convergence"] = iccp3m_cfg.convergence
-            params["relaxation"] = iccp3m_cfg.relax
-            params["eps_out"] = iccp3m_cfg.eout
+                return self._params
 
-            params["maxCharge"] = iccp3m_data.maxCharge
-            params["minCharge"] = iccp3m_data.minCharge
-
-            return params
-
-        def _set_params_in_es_core(self):
-            # First set number of icc particles
-            iccp3m_cfg.n_ic = self._params["n_icc"]
-            iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size();
-            # Allocate ICC lists
-            iccp3m_alloc_lists()
-
-            # Fill Lists
-            for i in range(iccp3m_cfg.n_ic):
-                iccp3m_cfg.normals[i][0] = self._params["normals"][i][0]
-                iccp3m_cfg.normals[i][1] = self._params["normals"][i][1]
-                iccp3m_cfg.normals[i][2] = self._params["normals"][i][2]
-
-                iccp3m_cfg.areas[i] = self._params["areas"][i]
-                iccp3m_cfg.ein[i] = self._params["epsilons"][i]
-                iccp3m_cfg.sigma[i] = self._params["sigmas"][i]
-
-            iccp3m_cfg.ext_field[0] = self._params["ext_field"][0]
-            iccp3m_cfg.ext_field[1] = self._params["ext_field"][1]
-            iccp3m_cfg.ext_field[2] = self._params["ext_field"][2]
-            iccp3m_cfg.first_id = self._params["first_id"]
-            iccp3m_cfg.num_iteration = self._params["max_iterations"]
-            iccp3m_cfg.convergence = self._params["convergence"]
-            iccp3m_cfg.relax = self._params["relaxation"]
-            iccp3m_cfg.eout = self._params["eps_out"]
-            iccp3m_cfg.citeration = 0
-            iccp3m_data.maxCharge = self._params["maxCharge"]
-            iccp3m_data.minCharge = self._params["minCharge"]
-            iccp3m_cfg.largestID = self._params["first_id"] + self._params["n_icc"]
+            def _set_params_in_es_core(self):
+                iccp3m_cfg.ext_field[0] = self._params["ext_field"][0]
+                iccp3m_cfg.ext_field[1] = self._params["ext_field"][1]
+                iccp3m_cfg.ext_field[2] = self._params["ext_field"][2]
+                iccp3m_cfg.num_iteration = self._params["max_iterations"]
+                iccp3m_cfg.convergence = self._params["convergence"]
+                iccp3m_cfg.relax = self._params["relaxation"]
+                iccp3m_cfg.eout = self._params["eps_out"]
+                iccp3m_cfg.citeration = 0
+                iccp3m_cfg.maxCharge = self._params["maxCharge"]
+                iccp3m_cfg.minCharge = self._params["minCharge"]
+                iccp3m_data.largestID = self._params["n_icc"] + self._params["first_id"]
+                iccp3m_cfg.n_icc = self._params["n_icc"]
+                iccp3m_cfg.first_id = self._params["first_id"]
+                iccp3m_cfg.active = self._params["active"]
 
             # Broadcasts vars
             mpi_iccp3m_init()
@@ -351,8 +294,8 @@ IF ELECTROSTATICS and P3M:
                     # print(frontData[i].charge)
                     # print(frontData[i].area)
                     # print(frontData[i].normal[0], frontData[i].normal[1], frontData[i].normal[2])
-                    currID.push_back(iccp3m_cfg.largestID)
-                    _system.part.add(id=iccp3m_cfg.largestID,
+                    currID.push_back(iccp3m_data.largestID)
+                    _system.part.add(id=iccp3m_data.largestID,
                                      pos=[frontData[i].pos[0],
                                           frontData[i].pos[1],
                                           frontData[i].pos[2]],
@@ -369,8 +312,8 @@ IF ELECTROSTATICS and P3M:
                                      iccTypeID=frontData[i].iccTypeID,
                                      type=frontData[i].typeID,
                                      fix=[1, 1, 1])
-                    iccp3m_cfg.largestID += 1
-                    iccp3m_cfg.n_ic += 1
+                    iccp3m_data.n_icc += 1
+                    iccp3m_data.largestID += 1
                 # remove vector from list
                 iccp3m_data.newParticleData.pop()
                 iccp3m_data.trackList.push_back(currID)
@@ -379,28 +322,21 @@ IF ELECTROSTATICS and P3M:
 
         def _activate_method(self):
             check_neutrality(self._params)
-            # self._set_params_in_es_core()
+            self._params["active"] = 1
+            self._set_params_in_es_core()
+
 
         def _deactivate_method(self):
-            iccp3m_cfg.n_ic = 0
-            # Allocate ICC lists
-            iccp3m_alloc_lists()
+            self._params["active"] = 0
+            self._set_params_in_es_core()
 
             # Broadcasts vars
-            mpi_iccp3m_init()
-
-        def rebuildData(self):
-            iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size()
-            iccp3m_alloc_lists()
-            c_rebuildData(partCfg())
-
             mpi_iccp3m_init()
 
         def splitParticles(self, _system, _rerun=True, _force=False):
             c_splitParticles(partCfg(), _force)
 
             if self._addNewParticlesToSystem(_system):
-                self.rebuildData()
                 if _rerun:
                     self.splitParticles(_system, _rerun=True, _force=_force)
 
@@ -408,39 +344,36 @@ IF ELECTROSTATICS and P3M:
             c_getCharges(partCfg())
             return iccp3m_data.iccCharges
 
-        def newParticles(self, _number):
-            iccp3m_cfg.n_ic = _number
-            self.rebuildData()
-
-
         def reduceParticles(self, _system, _force=False):
             cdef set[int] noReduce
             skip = False
             summe = 0.;
 
-            c_getCharges(partCfg())
+            # c_getCharges(partCfg())
             for vec in reversed(iccp3m_data.trackList):
                 skip = False
 
                 # check if any particle is unreducable
                 if not any(noReduce.count(vec[i]) for i in range(len(vec))):
                     # calculate charge sum
+                    summe = 0.;
                     for i in range(len(vec)):
-                        summe += iccp3m_data.iccCharges[i]
-                    if _force or abs(summe) < iccp3m_data.minCharge:
+                        summe += _system.part[vec[i]].q
+                    if _force or abs(summe) < iccp3m_cfg.minCharge:
 
-                        iccp3m_data.reducedPart.iccTypeID = _system.part[vec[0]].iccTypeID
+                        part = _system.part[vec[0]]
+
+                        iccp3m_data.reducedPart.iccTypeID = part.iccTypeID
                         for i in range(3):
-                            iccp3m_data.reducedPart.pos[i] = _system.part[vec[0]].pos[i]
-                            iccp3m_data.reducedPart.displace[i] = _system.part[vec[0]].displace[i]
-                            iccp3m_data.reducedPart.normal[i] = _system.part[vec[0]].normal[i]
+                            iccp3m_data.reducedPart.pos[i] = part.pos[i]
+                            iccp3m_data.reducedPart.displace[i] = part.displace[i]
+                            iccp3m_data.reducedPart.normal[i] = part.normal[i]
 
                         c_reduceParticle()
 
                         # delete other particles
                         # update numMissingIDs if not the last ones <- problem here!
 
-                        part = _system.part[vec[0]]
                         part.pos = [iccp3m_data.reducedPart.pos[0],
                                     iccp3m_data.reducedPart.pos[1],
                                     iccp3m_data.reducedPart.pos[2]]
@@ -453,9 +386,9 @@ IF ELECTROSTATICS and P3M:
                                          iccp3m_data.reducedPart.displace[1],
                                          iccp3m_data.reducedPart.displace[2]]
 
-                        iccp3m_cfg.n_ic -= len(vec) - 1
-                        if vec[-1] == (iccp3m_cfg.largestID - 1):
-                            iccp3m_cfg.largestID -= len(vec) - 1
+                        iccp3m_data.n_icc -= len(vec) - 1
+                        if vec[-1] == (iccp3m_data.largestID - 1):
+                            iccp3m_data.largestID -= len(vec) - 1
                             c_checkSet(vec[1] - 1)
                         else:
                             for i in range(1, len(vec)):
@@ -464,15 +397,15 @@ IF ELECTROSTATICS and P3M:
                         # print('{} - {}'.format(vec, len(_system.part)))
                         _system.part[vec[1]:vec[-1]+1].remove()
                         iccp3m_data.trackList.remove(vec)
+                    else:
+                        for i in range(len(vec)):
+                            noReduce.insert(vec[i])
                 else:
-                    print('actually got to else!')
-                    noReduce.insert(vec)
-                    # exit early if all particles are unsplittable
-                    if len(noReduce) >= iccp3m_cfg.n_ic:
-                        print('early breakout!')
+                    for i in range(len(vec)):
+                        noReduce.insert(vec[i])
+                    # here would be the place for an early breakout!
+                    if len(noReduce) >= iccp3m_cfg.n_icc:
                         break
-            iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size()
-            self.rebuildData()
 
         def outputICCData(self, _filename):
             if (c_outputVTK(utils.to_char_pointer(_filename), partCfg())):

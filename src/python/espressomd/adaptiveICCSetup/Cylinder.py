@@ -5,9 +5,8 @@ from numpy.linalg import inv
 
 class SetupCylinder(object):
 
-    def __init__(self, system, center, axis, length, radius, nCylinderPhi, nCylinderZ, direction=1, transMatrix=None, invMatrix=None, typeIDoffset=None):
+    def __init__(self, center, axis, length, radius, nCylinderPhi, nCylinderZ, direction=1, transMatrix=None, invMatrix=None, typeIDoffset=None):
 
-        self.system = system
         self.center = np.array(center, dtype=float)
         self.axis = np.array(axis, dtype=float)
         self.length = length
@@ -69,7 +68,7 @@ class SetupCylinder(object):
                                                 _invMatrix=self.invMatrix.flatten())
 
 
-    def initParticles(self, particleTypeID, iccTypeID, initCharge, sigma, epsilon, splitCutoff=0.):
+    def initParticles(self, system, particleTypeID, iccTypeID, initCharge, sigma, epsilon, splitCutoff=0.):
         '''
           initialize all particles for given parts
 
@@ -138,7 +137,7 @@ class SetupCylinder(object):
 
                     pos = self.calcCylPart(phi, z, np.array([0., DeltaPhi / 2., DeltaZ / 2.]))
 
-                    self.system.part.add(pos=np.dot(self.transMatrix, pos[0]),
+                    system.part.add(pos=np.dot(self.transMatrix, pos[0]),
                                          q=initCharge,
                                          normal=np.dot(self.transMatrix, pos[1]),
                                          area=pos[2],
@@ -147,8 +146,7 @@ class SetupCylinder(object):
                                          displace=[0., DeltaPhi / 2., DeltaZ / 2.],
                                          iccTypeID=iccTypeID,
                                          type=particleTypeID,
-                                         fix=[1, 1, 1],
-                                         f=[0, 0, 0])
+                                         fix=[1, 1, 1])
 
 
     def calcCylPart(self, phi, z, dxdydz):
