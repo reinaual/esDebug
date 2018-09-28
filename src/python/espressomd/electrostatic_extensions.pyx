@@ -26,6 +26,8 @@ import numpy as np
 from espressomd.utils cimport handle_errors
 from . import utils
 from .system import System
+import datetime
+from . import timing
 
 import cython
 from libcpp.set cimport set
@@ -281,6 +283,8 @@ IF ELECTROSTATICS and P3M:
                 # print(frontData[0].area)
                 # print(frontData[0].normal[0], frontData[0].normal[1], frontData[0].normal[2])
 
+                dtime = datetime.datetime.now()
+
                 parentPart = _system.part[frontData[0].parentID]
                 parentPart.pos = [frontData[0].pos[0],
                                   frontData[0].pos[1],
@@ -293,6 +297,9 @@ IF ELECTROSTATICS and P3M:
                                      frontData[0].normal[1],
                                      frontData[0].normal[2]]
                 parentPart.area = frontData[0].area
+
+                timing.timing['AddingUpdate'] += (datetime.datetime.now() - dtime).total_seconds()
+                dtime = datetime.datetime.now()
 
                 # add leftover particles
                 for i in range(1, frontData.size()):
@@ -319,6 +326,8 @@ IF ELECTROSTATICS and P3M:
                                      fix=[1, 1, 1])
                     iccp3m_cfg.n_icc += 1
                     iccp3m_data.largestID += 1
+
+                timing.timing['AddingNew'] += (datetime.datetime.now() - dtime).total_seconds()
                 # remove vector from list
                 iccp3m_data.newParticleData.pop()
                 iccp3m_data.trackList.push_back(currID)
@@ -339,13 +348,18 @@ IF ELECTROSTATICS and P3M:
             mpi_iccp3m_init()
 
         def splitParticles(self, _system, _rerun=True, _force=False):
+            dtime = datetime.datetime.now()
             c_splitParticles(partCfg(), _force)
+            timing.timing['Splitting'] += (datetime.datetime.now() - dtime).total_seconds()
 
-            if self._addNewParticlesToSystem(_system):
-                if _rerun:
-                    self.splitParticles(_system, _rerun=True, _force=_force)
+            dtime = datetime.datetime.now()
+            deb = self._addNewParticlesToSystem(_system)
+            timing.timing['AddingTotal'] += (datetime.datetime.now() - dtime).total_seconds()
+            if deb and _rerun:
+                self.splitParticles(_system, _rerun=True, _force=_force)
 
         def reduceParticles(self, _system, _force=False):
+            dtime = datetime.datetime.now()
             cdef set[int] noReduce = set[int]()
             cdef list[vector[int]].reverse_iterator rit = iccp3m_data.trackList.rbegin()
             cdef vector[int].iterator vecIt
@@ -414,7 +428,9 @@ IF ELECTROSTATICS and P3M:
                             inc(vecIt)
 
                     # print('{} - {}'.format(vec, len(_system.part)))
+                    a = datetime.datetime.now()
                     _system.part[vec[1]:vec.back() + 1].remove()
+                    timing.timing['ReduceRemoving'] += (datetime.datetime.now() - dtime).total_seconds()
                     iccp3m_data.trackList.remove(vec)
                     # increase because of removage
                     dec(rit)
@@ -428,13 +444,19 @@ IF ELECTROSTATICS and P3M:
                 # increment reverse_iterator
                 inc(rit)
 
+            timing.timing['Reducing'] += (datetime.datetime.now() - dtime).total_seconds()
+
         def outputICCData(self, _filename):
+            dtime = datetime.datetime.now()
             if (c_outputVTK(utils.to_char_pointer(_filename), partCfg())):
                 print('Something seemed to went wrong!')
+            timing.timing['Output'] += (datetime.datetime.now() - dtime).total_seconds()
 
         def outputParticleData(self, _filename):
+            dtime = datetime.datetime.now()
             if (c_outputParticle(utils.to_char_pointer(_filename), partCfg())):
                 print('Something seemed to went wrong!')
+            timing.timing['Output'] += (datetime.datetime.now() - dtime).total_seconds()
 
         def addTypeWall(self, _cutoff, _useTrans=False, _transMatrix=None, _invMatrix=None):
             cdef Vector3d cutoff

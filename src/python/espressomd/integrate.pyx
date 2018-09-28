@@ -20,6 +20,8 @@ from __future__ import print_function, absolute_import
 include "myconfig.pxi"
 import espressomd.code_info
 from espressomd.utils cimport *
+from . import timing
+import datetime
 
 cdef class Integrator(object):
     """
@@ -57,6 +59,7 @@ cdef class Integrator(object):
                                    'piston'], direction=npt_params['direction'], cubic_box=npt_params['cubic_box'])
 
     def run(self, steps=1, recalc_forces=False, reuse_forces=False):
+        dtime = datetime.datetime.now()
         """
         Run the integrator.
 
@@ -89,6 +92,7 @@ cdef class Integrator(object):
             raise ValueError("No integrator method set!")
 
         handle_errors("Encoutered errors during integrate")
+        timing.timing['Integration'] += (datetime.datetime.now() - dtime).total_seconds()
 
     def set_steepest_descent(self, *args, **kwargs):
         """
