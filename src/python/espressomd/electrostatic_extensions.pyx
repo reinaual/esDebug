@@ -361,10 +361,6 @@ IF ELECTROSTATICS and P3M:
                 sumCharge = 0.
                 sumArea = 0.
 
-                print(vec)
-
-                print(_system.part[:].id)
-
                 # check if any particle is unreducable
                 while vecIt != vec.end():
                     if noReduce.find(deref(vecIt)) != noReduce.end():
@@ -420,6 +416,8 @@ IF ELECTROSTATICS and P3M:
                     # print('{} - {}'.format(vec, len(_system.part)))
                     _system.part[vec[1]:vec.back() + 1].remove()
                     iccp3m_data.trackList.remove(vec)
+                    # increase because of removage
+                    dec(rit)
                 else:
                     for val in vec:
                         noReduce.insert(val)
