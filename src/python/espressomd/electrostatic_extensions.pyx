@@ -27,6 +27,11 @@ from espressomd.utils cimport handle_errors
 from . import utils
 from .system import System
 
+import cython
+from libcpp.set cimport set
+from libcpp.vector cimport vector
+from cython.operator cimport dereference as deref, predecrement as dec, preincrement as inc
+
 IF ELECTROSTATICS and P3M:
     from espressomd.electrostatics import check_neutrality
 
@@ -341,66 +346,89 @@ IF ELECTROSTATICS and P3M:
                     self.splitParticles(_system, _rerun=True, _force=_force)
 
         def reduceParticles(self, _system, _force=False):
-            cdef set[int] noReduce
-            skip = False
-            summe = 0.;
+            cdef set[int] noReduce = set[int]()
+            cdef list[vector[int]].reverse_iterator rit = iccp3m_data.trackList.rbegin()
+            cdef vector[int].iterator vecIt
+            cdef vector[int] vec
+            cdef sumArea = 0.
+            cdef sumCharge = 0.
+            cdef bool force = _force
 
-            for vec in reversed(iccp3m_data.trackList):
-                skip = False
+
+            while rit != iccp3m_data.trackList.rend():
+                vec = deref(rit)
+                vecIt = vec.begin()
+                sumCharge = 0.
+                sumArea = 0.
+
+                print(vec)
+
+                print(_system.part[:].id)
 
                 # check if any particle is unreducable
-                if not any(noReduce.count(vec[i]) for i in range(len(vec))):
-                    # calculate charge sum
-                    summe = 0.;
-                    for i in range(len(vec)):
-                        summe += _system.part[vec[i]].q
-                    if _force or abs(summe) < iccp3m_cfg.minCharge:
-
-                        part = _system.part[vec[0]]
-
-                        iccp3m_data.reducedPart.iccTypeID = part.iccTypeID
-                        for i in range(3):
-                            iccp3m_data.reducedPart.pos[i] = part.pos[i]
-                            iccp3m_data.reducedPart.displace[i] = part.displace[i]
-                            iccp3m_data.reducedPart.normal[i] = part.normal[i]
-
-                        c_reduceParticle()
-
-                        # delete other particles
-                        # update numMissingIDs if not the last ones <- problem here!
-
-                        part.pos = [iccp3m_data.reducedPart.pos[0],
-                                    iccp3m_data.reducedPart.pos[1],
-                                    iccp3m_data.reducedPart.pos[2]]
-                        part.normal = [iccp3m_data.reducedPart.normal[0],
-                                       iccp3m_data.reducedPart.normal[1],
-                                       iccp3m_data.reducedPart.normal[2]]
-                        part.area = sum(_system.part[vec].area)
-                        part.q = sum(_system.part[vec].q)
-                        part.displace = [iccp3m_data.reducedPart.displace[0],
-                                         iccp3m_data.reducedPart.displace[1],
-                                         iccp3m_data.reducedPart.displace[2]]
-
-                        iccp3m_cfg.n_icc -= len(vec) - 1
-                        if vec[-1] == (iccp3m_data.largestID - 1):
-                            iccp3m_data.largestID -= len(vec) - 1
-                            c_checkSet(vec[1] - 1)
-                        else:
-                            for i in range(1, len(vec)):
-                                iccp3m_data.missingIDs.insert(vec[i])
-
-                        # print('{} - {}'.format(vec, len(_system.part)))
-                        _system.part[vec[1]:vec[-1]+1].remove()
-                        iccp3m_data.trackList.remove(vec)
-                    else:
-                        for i in range(len(vec)):
-                            noReduce.insert(vec[i])
-                else:
-                    for i in range(len(vec)):
-                        noReduce.insert(vec[i])
-                    # here would be the place for an early breakout!
-                    if len(noReduce) >= iccp3m_cfg.n_icc:
+                while vecIt != vec.end():
+                    if noReduce.find(deref(vecIt)) != noReduce.end():
                         break
+                    temp = _system.part[<size_t>deref(vecIt)]
+                    sumCharge += temp.q
+                    sumArea += temp.area
+                    inc(vecIt)
+
+                #early breakout
+                if vecIt != vec.end():
+                    # cython iterator insertion broken?
+                    # noReduce.insert(vec.begin(), vec.end())
+                    for val in vec:
+                        noReduce.insert(val)
+                    continue
+
+                if force or abs(sumCharge) < iccp3m_cfg.minCharge:
+                    particle = _system.part[<size_t>vec[0]]
+
+                    iccp3m_data.reducedPart.iccTypeID = particle.iccTypeID
+                    for i in range(3):
+                        iccp3m_data.reducedPart.pos[i] = particle.pos[i]
+                        iccp3m_data.reducedPart.displace[i] = particle.displace[i]
+                        iccp3m_data.reducedPart.normal[i] = particle.normal[i]
+
+                    c_reduceParticle()
+
+                    # print(iccp3m_data.reducedPart.normal[0], iccp3m_data.reducedPart.normal[1], iccp3m_data.reducedPart.normal[1])
+
+                    particle.pos = [iccp3m_data.reducedPart.pos[0],
+                                iccp3m_data.reducedPart.pos[1],
+                                iccp3m_data.reducedPart.pos[2]]
+                    particle.normal = [iccp3m_data.reducedPart.normal[0],
+                                   iccp3m_data.reducedPart.normal[1],
+                                   iccp3m_data.reducedPart.normal[2]]
+                    particle.area = sumArea
+                    particle.q = sumCharge
+                    particle.displace = [iccp3m_data.reducedPart.displace[0],
+                                     iccp3m_data.reducedPart.displace[1],
+                                     iccp3m_data.reducedPart.displace[2]]
+
+                    iccp3m_cfg.n_icc -= vec.size() - 1
+                    if vec[-1] == (iccp3m_data.largestID - 1):
+                        iccp3m_data.largestID -= vec.size() - 1
+                        c_checkSet(vec[1] - 1)
+                    else:
+                        vecIt = vec.begin() + 1
+                        while vecIt != vec.end():
+                            iccp3m_data.missingIDs.insert(deref(vecIt))
+                            inc(vecIt)
+
+                    # print('{} - {}'.format(vec, len(_system.part)))
+                    _system.part[vec[1]:vec.back() + 1].remove()
+                    iccp3m_data.trackList.remove(vec)
+                else:
+                    for val in vec:
+                        noReduce.insert(val)
+
+                if noReduce.size() >= iccp3m_cfg.n_icc:
+                    print('early breakout')
+                    break
+                # increment reverse_iterator
+                inc(rit)
 
         def outputICCData(self, _filename):
             if (c_outputVTK(utils.to_char_pointer(_filename), partCfg())):

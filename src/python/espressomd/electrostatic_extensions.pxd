@@ -26,11 +26,13 @@ from espressomd.electrostatics cimport *
 from libcpp cimport vector
 from libcpp.queue cimport queue
 from libcpp.list cimport list
-from libcpp.set cimport set
+from libcpp.set cimport *
 from utils cimport Vector3d
-from cython.operator cimport dereference as deref, preincrement as inc
+from cython.operator cimport dereference as deref, predecrement as dec
 from libcpp cimport bool
 
+cdef extern from "<algorithm>" namespace "std":
+    Iter find_if[Iter, Func](Iter first, Iter last, Func pred)
 
 cdef extern from "PartCfg.hpp":
     cppclass PartCfg:
