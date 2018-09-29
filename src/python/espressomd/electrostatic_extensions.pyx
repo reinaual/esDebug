@@ -359,7 +359,7 @@ IF ELECTROSTATICS and P3M:
                 self.splitParticles(_system, _rerun=True, _force=_force)
 
         def reduceParticles(self, _system, _force=False):
-            dtime = datetime.datetime.now()
+            starttime = datetime.datetime.now()
             cdef set[int] noReduce = set[int]()
             cdef list[vector[int]].reverse_iterator rit = iccp3m_data.trackList.rbegin()
             cdef vector[int].iterator vecIt
@@ -390,6 +390,7 @@ IF ELECTROSTATICS and P3M:
                     # noReduce.insert(vec.begin(), vec.end())
                     for val in vec:
                         noReduce.insert(val)
+                    inc(rit)
                     continue
 
                 if force or abs(sumCharge) < iccp3m_cfg.minCharge:
@@ -429,6 +430,7 @@ IF ELECTROSTATICS and P3M:
 
                     # print('{} - {}'.format(vec, len(_system.part)))
                     a = datetime.datetime.now()
+                    dtime = datetime.datetime.now()
                     _system.part[vec[1]:vec.back() + 1].remove()
                     timing.timing['ReduceRemoving'] += (datetime.datetime.now() - dtime).total_seconds()
                     iccp3m_data.trackList.remove(vec)
@@ -444,7 +446,10 @@ IF ELECTROSTATICS and P3M:
                 # increment reverse_iterator
                 inc(rit)
 
-            timing.timing['Reducing'] += (datetime.datetime.now() - dtime).total_seconds()
+            iccp3m_cfg.numMissingIDs = iccp3m_data.missingIDs.size()
+            mpi_iccp3m_init()
+
+            timing.timing['Reducing'] += (datetime.datetime.now() - starttime).total_seconds()
 
         def outputICCData(self, _filename):
             dtime = datetime.datetime.now()
