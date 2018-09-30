@@ -391,6 +391,9 @@ IF ELECTROSTATICS and P3M:
                     for val in vec:
                         noReduce.insert(val)
                     inc(rit)
+                    if noReduce.size() >= iccp3m_cfg.n_icc:
+                        print('early breakout')
+                        break
                     continue
 
                 if force or abs(sumCharge) < iccp3m_cfg.minCharge:
@@ -431,7 +434,10 @@ IF ELECTROSTATICS and P3M:
                     # print('{} - {}'.format(vec, len(_system.part)))
                     a = datetime.datetime.now()
                     dtime = datetime.datetime.now()
-                    _system.part[vec[1]:vec.back() + 1].remove()
+                    vecIt = vec.begin() + 1
+                    while vecIt != vec.end():
+                        _system.part[<size_t>deref(vecIt)].remove()
+                        inc(vecIt)
                     timing.timing['ReduceRemoving'] += (datetime.datetime.now() - dtime).total_seconds()
                     iccp3m_data.trackList.remove(vec)
                     # increase because of removage

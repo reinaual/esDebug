@@ -442,7 +442,8 @@ POINTS %u double\n", iccp3m_cfg.first_id);
   // position
   for (auto &p : partCfg) {
     if (p.p.identity < iccp3m_cfg.first_id) {
-          fprintf(fp, "%f %f %f ", p.r.p[0], p.r.p[1], p.r.p[2]);
+          auto pp = folded_position(p);
+          fprintf(fp, "%f %f %f ", pp[0], pp[1], pp[2]);
           forces.push_back(p.f.f);
     }
   }
