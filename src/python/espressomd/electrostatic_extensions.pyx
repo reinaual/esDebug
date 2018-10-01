@@ -373,7 +373,7 @@ IF ELECTROSTATICS and P3M:
                 vec = deref(rit)
                 vecIt = vec.begin()
                 sumCharge = 0.
-                sumArea = 0.
+                sumArea = 0
 
                 # check if any particle is unreducable
                 while vecIt != vec.end():
@@ -422,7 +422,7 @@ IF ELECTROSTATICS and P3M:
                                      iccp3m_data.reducedPart.displace[2]]
 
                     iccp3m_cfg.n_icc -= vec.size() - 1
-                    if vec[-1] == (iccp3m_data.largestID - 1):
+                    if vec.back() == (iccp3m_data.largestID - 1):
                         iccp3m_data.largestID -= vec.size() - 1
                         c_checkSet(vec[1] - 1)
                     else:

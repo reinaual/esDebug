@@ -338,7 +338,6 @@ void c_checkSet(int ID) {
     if (*(--it) == ID) {
       iccp3m_data.missingIDs.erase(it);
       iccp3m_data.largestID--;
-      iccp3m_cfg.n_icc--;
       ID--;
     } else {
       break;
