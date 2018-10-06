@@ -533,10 +533,10 @@ class SetupSimplePore(object):
     if temp > 0.:
       # suface integration
       temp = np.sqrt(temp)
-      return 2 * self.radius * np.abs(z) - 0.5 * (zprime * temp + self.smoothing_radius ** 2. * np.arctan(zprime / temp))
+      return self.radius * (self.radiusOuter * np.arctan(zprime / temp) - zprime)
     else:
       # area is approaching the infinite partial derivate part
-      return 2 * self.radius * np.abs(z) - 0.25 * self.smoothing_radius ** 2. * np.pi
+      return self.radius * (self.radiusOuter * 0.5 * np.pi - zprime)
 
   def splitExtTorus(self, ppos, dxdydz):
     '''
