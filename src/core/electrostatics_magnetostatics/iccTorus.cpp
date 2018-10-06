@@ -121,15 +121,14 @@ std::tuple<Vector3d, Vector3d, double> iccTorus::calcTorusPart(double phi, doubl
 }
 
 double iccTorus::calcArea(double z) {
-
     double zprime = std::abs(z) - innerLengthHalf;
     double temp = smoothingRadius * smoothingRadius - zprime * zprime;
 
     if (temp > 0.) {
         temp = sqrt(temp);
-        return 2. * radius * std::abs(z) - 0.5 * (zprime * temp + smoothingRadius * smoothingRadius * atan(zprime / temp));
+        return radius * (radiusOuter * atan(zprime / temp) - zprime);
     } else {
-        return 2. * radius * std::abs(z) - 0.25 * smoothingRadius * smoothingRadius * PI;
+        return radius * (radiusOuter * 0.5 * PI - zprime);
     }
 }
 
