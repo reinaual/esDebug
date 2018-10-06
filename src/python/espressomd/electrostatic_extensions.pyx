@@ -229,7 +229,8 @@ IF ELECTROSTATICS and P3M:
                     "eps_out": 1,
                     "check_neutrality": True,
                     "maxCharge": 0.,
-                    "minCharge": 0.}
+                    "minCharge": 0.,
+                    "largestID": 0}
 
         def _get_params_from_es_core(self):
             self._params["ext_field"] = [iccp3m_cfg.ext_field[0],
@@ -260,7 +261,10 @@ IF ELECTROSTATICS and P3M:
             iccp3m_cfg.citeration = 0
             iccp3m_cfg.maxCharge = self._params["maxCharge"]
             iccp3m_cfg.minCharge = self._params["minCharge"]
-            iccp3m_data.largestID = self._params["n_icc"] + self._params["first_id"]
+            if self._params["largestID"] > 0:
+                iccp3m_data.largestID = self._params["largestID"]
+            else:
+                iccp3m_data.largestID = self._params["first_id"] + self._params["n_icc"]
             iccp3m_cfg.n_icc = self._params["n_icc"]
             iccp3m_cfg.first_id = self._params["first_id"]
             iccp3m_cfg.active = self._params["active"]
@@ -343,9 +347,6 @@ IF ELECTROSTATICS and P3M:
         def _deactivate_method(self):
             self._params["active"] = 0
             self._set_params_in_es_core()
-
-            # Broadcasts vars
-            mpi_iccp3m_init()
 
         def splitParticles(self, _system, _rerun=True, _force=False):
             dtime = datetime.datetime.now()
