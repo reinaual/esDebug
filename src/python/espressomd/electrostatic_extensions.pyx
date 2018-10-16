@@ -393,7 +393,6 @@ IF ELECTROSTATICS and P3M:
                         noReduce.insert(val)
                     inc(rit)
                     if noReduce.size() >= iccp3m_cfg.n_icc:
-                        print('early breakout')
                         break
                     continue
 
@@ -448,7 +447,6 @@ IF ELECTROSTATICS and P3M:
                         noReduce.insert(val)
 
                 if noReduce.size() >= iccp3m_cfg.n_icc:
-                    print('early breakout')
                     break
                 # increment reverse_iterator
                 inc(rit)

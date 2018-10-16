@@ -74,7 +74,7 @@ class SetupWall(object):
                                  _invMatrix=self.invMatrix.flatten())
 
 
-    def initParticles(self, system, particleTypeID, iccTypeID, initCharge, sigma, epsilon, splitCutoff=0.):
+    def initParticles(self, system, TypeID, iccTypeID, initCharge, sigma, epsilon, splitCutoff=0.):
         '''
           initialize all particles for given parts
 
